@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Sparkles, Send, Cpu, AlertTriangle, User, Play, Image as ImageIcon, Volume2, ShieldAlert } from 'lucide-react';
 import Sidebar from '../../components/Sidebar.jsx';

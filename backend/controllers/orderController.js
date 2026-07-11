@@ -21,7 +21,9 @@ export const checkout = asyncHandler(async (req, res, next) => {
     throw new Error('No items in checkout');
   }
 
-  if (!req.file) {
+  const isStripe = paymentMethod === 'Stripe';
+
+  if (!isStripe && !req.file) {
     res.status(400);
     throw new Error('Please upload payment proof receipt screenshot');
   }
@@ -73,8 +75,12 @@ export const checkout = asyncHandler(async (req, res, next) => {
 
   const finalAmount = rawTotal - discount;
 
-  // Upload receipt proof to Cloudinary
-  const uploadResult = await uploadImage(req.file.buffer, 'youngo_receipts');
+  // Upload receipt proof to Cloudinary if manual
+  let screenshotUrl = '';
+  if (!isStripe) {
+    const uploadResult = await uploadImage(req.file.buffer, 'youngo_receipts');
+    screenshotUrl = uploadResult.secure_url;
+  }
 
   // Create Order
   const order = await Order.create({
@@ -84,29 +90,95 @@ export const checkout = asyncHandler(async (req, res, next) => {
     paymentMethod,
     couponCode: couponCode ? couponCode.toUpperCase() : '',
     discountApplied: discount,
-    paymentStatus: 'Pending'
+    paymentStatus: isStripe ? 'Completed' : 'Pending'
   });
+
+  if (isStripe) {
+    order.invoiceUrl = `/api/orders/${order._id}/invoice/download`;
+    await order.save();
+  }
 
   // Create Payment record
   await Payment.create({
     order: order._id,
     user: req.user.id,
-    screenshotUrl: uploadResult.secure_url,
-    transactionId: transactionId,
-    status: 'Pending'
+    screenshotUrl,
+    transactionId: isStripe ? (transactionId || `STRIPE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`) : transactionId,
+    status: isStripe ? 'Approved' : 'Pending',
+    verifiedBy: isStripe ? req.user.id : null,
+    verifiedAt: isStripe ? Date.now() : null
   });
 
-  // Notify admin (mock/real Notification)
-  await Notification.create({
-    user: null, // Admin wide alert
-    title: 'New Manual Payment Order',
-    message: `User ${req.user.name} submitted an order worth ${finalAmount} PKR using ${paymentMethod}.`,
-    type: 'Payment'
-  });
+  if (isStripe) {
+    // 2. Allocate subscriptions and credits to User immediately
+    const userWallet = await Wallet.findOne({ user: req.user.id });
+    let totalPurchasedCredits = 0;
+
+    for (const item of order.items) {
+      totalPurchasedCredits += item.credits;
+
+      // Check if subscription exists, otherwise create it
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + 30); // 30 days duration
+
+      let sub = await Subscription.findOne({ user: req.user.id, tool: item.tool });
+
+      if (sub) {
+        // Extend subscription credits and reset expiration
+        sub.creditsRemaining += item.credits;
+        sub.expiresAt = expiry;
+        sub.status = 'Active';
+      } else {
+        // Create new
+        sub = new Subscription({
+          user: req.user.id,
+          tool: item.tool,
+          creditsRemaining: item.credits,
+          expiresAt: expiry,
+          status: 'Active'
+        });
+      }
+      await sub.save();
+
+      // Log subscription transaction
+      await Transaction.create({
+        user: req.user.id,
+        type: 'Purchase',
+        amount: item.credits,
+        description: `Purchased ${item.name} access subscription via Card/Stripe`,
+        referenceId: item.tool.toString()
+      });
+    }
+
+    // 3. Update User overall Wallet credits & add loyalty points (1 point per 10 PKR spent)
+    if (userWallet) {
+      userWallet.totalCredits += totalPurchasedCredits;
+      userWallet.loyaltyPoints += Math.floor(order.totalAmount / 10);
+      await userWallet.save();
+    }
+
+    // 4. Create Notification
+    await Notification.create({
+      user: req.user.id,
+      title: 'Subscription Activated Instantly!',
+      message: `Your Stripe payment of ${order.totalAmount} PKR was successful. Your credits have been allocated.`,
+      type: 'Payment'
+    });
+  } else {
+    // Notify admin (mock/real Notification)
+    await Notification.create({
+      user: null, // Admin wide alert
+      title: 'New Manual Payment Order',
+      message: `User ${req.user.name} submitted an order worth ${finalAmount} PKR using ${paymentMethod}.`,
+      type: 'Payment'
+    });
+  }
 
   res.status(201).json({
     success: true,
-    message: 'Order submitted. Wait for payment verification by the Admin.',
+    message: isStripe
+      ? 'Stripe payment processed successfully! Your credits are activated.'
+      : 'Order submitted. Wait for payment verification by the Admin.',
     order
   });
 });

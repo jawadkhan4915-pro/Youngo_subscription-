@@ -118,7 +118,7 @@ const UserWallet = () => {
       return;
     }
 
-    if (!receiptFile) {
+    if (paymentMethod !== 'Stripe' && !receiptFile) {
       setError('Please upload a screenshot of your payment receipt');
       setCheckoutLoading(false);
       return;
@@ -128,8 +128,12 @@ const UserWallet = () => {
     const formData = new FormData();
     formData.append('items[0][toolId]', selectedToolId);
     formData.append('paymentMethod', paymentMethod);
-    formData.append('transactionId', transactionId);
-    formData.append('receipt', receiptFile);
+    if (paymentMethod !== 'Stripe') {
+      formData.append('transactionId', transactionId);
+      formData.append('receipt', receiptFile);
+    } else {
+      formData.append('transactionId', `STRIPE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`);
+    }
     if (discountData) {
       formData.append('couponCode', discountData.code);
     }
@@ -352,20 +356,93 @@ const UserWallet = () => {
                       <option value="Bank Transfer">Bank Transfer (Standard Chartered)</option>
                       <option value="EasyPaisa">EasyPaisa Mobile Cash</option>
                       <option value="JazzCash">JazzCash Mobile Cash</option>
+                      <option value="Stripe">Instant Credit Card / Stripe</option>
                     </select>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Bank Transaction Reference / ID</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. TRX-9988223"
-                      value={transactionId}
-                      onChange={(e) => setTransactionId(e.target.value)}
-                      required
-                    />
-                  </div>
+                  {paymentMethod !== 'Stripe' ? (
+                    <>
+                      <div className="form-group">
+                        <label className="form-label">Bank Transaction Reference / ID</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. TRX-9988223"
+                          value={transactionId}
+                          onChange={(e) => setTransactionId(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Upload Receipt Image (PNG, JPG)</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setReceiptFile(e.target.files[0])}
+                          required
+                          style={{
+                            padding: '0.5rem',
+                            border: '1px dashed var(--border-color)',
+                            width: '100%',
+                            borderRadius: 'var(--radius-md)'
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ background: 'var(--bg-main)', padding: '1.25rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ display: 'block', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-primary)', marginBottom: '0.75rem', fontWeight: 600 }}>Simulated Stripe Checkout Gateway</span>
+                      
+                      <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <label className="form-label" style={{ fontSize: '0.75rem' }}>Cardholder Name</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="John Doe"
+                          required
+                          style={{ background: 'var(--bg-card)' }}
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <label className="form-label" style={{ fontSize: '0.75rem' }}>Card Number</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="4242 •••• •••• 4242"
+                          maxLength={19}
+                          required
+                          style={{ background: 'var(--bg-card)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label className="form-label" style={{ fontSize: '0.75rem' }}>Expiry Date</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            placeholder="MM / YY"
+                            maxLength={5}
+                            required
+                            style={{ background: 'var(--bg-card)' }}
+                          />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label className="form-label" style={{ fontSize: '0.75rem' }}>CVC / CVV</label>
+                          <input
+                            type="password"
+                            className="form-input"
+                            placeholder="•••"
+                            maxLength={3}
+                            required
+                            style={{ background: 'var(--bg-card)' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Promo coupon input */}
                   <div className="form-group">
@@ -393,22 +470,6 @@ const UserWallet = () => {
                         Promo applied: {discountData.type === 'Percentage' ? `${discountData.value}%` : `${discountData.value} PKR`} discount!
                       </span>
                     )}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Upload Receipt Image (PNG, JPG)</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setReceiptFile(e.target.files[0])}
-                      required
-                      style={{
-                        padding: '0.5rem',
-                        border: '1px dashed var(--border-color)',
-                        width: '100%',
-                        borderRadius: 'var(--radius-md)'
-                      }}
-                    />
                   </div>
 
                   {/* Pricing Breakdown */}
