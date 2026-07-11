@@ -85,8 +85,8 @@ const Navbar = () => {
                   height: '16px',
                   fontSize: '10px',
                   display: 'flex',
-                  align-items: 'center',
-                  justify-content: 'center'
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}>
                   {unreadNotifications}
                 </span>

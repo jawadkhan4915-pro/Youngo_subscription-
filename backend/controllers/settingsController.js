@@ -16,77 +16,78 @@ import { asyncHandler } from '../middlewares/error.js';
 // ==========================================
 
 export const getAdminDashboardStats = asyncHandler(async (req, res, next) => {
-  // Counts
-  const totalUsers = await User.countDocuments({ role: 'User' });
-  const activeUsers = await User.countDocuments({ role: 'User', status: 'Active' });
-  const totalTools = await AITool.countDocuments();
-  
-  // Revenue
-  const completedOrders = await Order.find({ paymentStatus: 'Completed' });
-  const totalRevenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
-
-  const totalOrders = await Order.countDocuments();
-  const pendingPayments = await Payment.countDocuments({ status: 'Pending' });
-  const activeSubs = await Subscription.countDocuments({ status: 'Active', expiresAt: { $gt: new Date() } });
-
-  // Credits Used Today
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
-  const todayLogs = await UsageLog.find({ createdAt: { $gte: startOfDay } });
-  const creditsUsedToday = todayLogs.reduce((sum, log) => sum + log.creditsDeducted, 0);
 
-  // Monthly Revenue (current month)
   const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const currentMonthOrders = await Order.find({
-    paymentStatus: 'Completed',
-    createdAt: { $gte: startOfMonth }
-  });
-  const monthlyRevenue = currentMonthOrders.reduce((sum, order) => sum + order.totalAmount, 0);
 
-  // Recent orders
-  const recentOrders = await Order.find()
-    .populate('user', 'name email')
-    .sort('-createdAt')
-    .limit(5);
-
-  // Recent usage activities
-  const recentActivities = await UsageLog.find()
-    .populate('user', 'name')
-    .populate('tool', 'name')
-    .sort('-createdAt')
-    .limit(5);
-
-  // Revenue analytics (Daily chart data for last 7 days)
-  const revenueChartData = [];
+  // Generate 7-day date ranges for parallel queries
+  const dayRanges = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     d.setHours(0,0,0,0);
     const nextD = new Date(d);
     nextD.setDate(nextD.getDate() + 1);
+    dayRanges.push({ d, nextD });
+  }
 
-    const dayOrders = await Order.find({
+  // Query counts, stats, recent data, and daily charts in parallel
+  const [
+    totalUsers,
+    activeUsers,
+    totalTools,
+    completedOrders,
+    totalOrders,
+    pendingPayments,
+    activeSubs,
+    todayLogs,
+    currentMonthOrders,
+    recentOrders,
+    recentActivities,
+    tools,
+    ...dayOrdersResults
+  ] = await Promise.all([
+    User.countDocuments({ role: 'User' }),
+    User.countDocuments({ role: 'User', status: 'Active' }),
+    AITool.countDocuments(),
+    Order.find({ paymentStatus: 'Completed' }),
+    Order.countDocuments(),
+    Payment.countDocuments({ status: 'Pending' }),
+    Subscription.countDocuments({ status: 'Active', expiresAt: { $gt: new Date() } }),
+    UsageLog.find({ createdAt: { $gte: startOfDay } }),
+    Order.find({ paymentStatus: 'Completed', createdAt: { $gte: startOfMonth } }),
+    Order.find().populate('user', 'name email').sort('-createdAt').limit(5),
+    UsageLog.find().populate('user', 'name').populate('tool', 'name').sort('-createdAt').limit(5),
+    AITool.find().limit(5),
+    // Spread 7-day order queries
+    ...dayRanges.map(range => Order.find({
       paymentStatus: 'Completed',
-      createdAt: { $gte: d, $lt: nextD }
-    });
-    const dayRev = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+      createdAt: { $gte: range.d, $lt: range.nextD }
+    }))
+  ]);
 
-    revenueChartData.push({
+  const totalRevenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const creditsUsedToday = todayLogs.reduce((sum, log) => sum + log.creditsDeducted, 0);
+  const monthlyRevenue = currentMonthOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+  // Map 7-day revenue chart data
+  const revenueChartData = dayOrdersResults.map((dayOrders, index) => {
+    const { d } = dayRanges[index];
+    const dayRev = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+    return {
       date: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
       revenue: dayRev
-    });
-  }
+    };
+  });
 
-  // AI Tool Popularity based on Usage Logs
-  const toolUsageData = [];
-  const tools = await AITool.find().limit(5);
-  for (const tool of tools) {
-    const usageCount = await UsageLog.countDocuments({ tool: tool._id });
-    toolUsageData.push({
-      name: tool.name,
-      value: usageCount
-    });
-  }
+  // Query tool usage counts in parallel
+  const toolPromises = tools.map(tool => UsageLog.countDocuments({ tool: tool._id }));
+  const toolCounts = await Promise.all(toolPromises);
+  const toolUsageData = tools.map((tool, index) => ({
+    name: tool.name,
+    value: toolCounts[index]
+  }));
 
   res.status(200).json({
     success: true,

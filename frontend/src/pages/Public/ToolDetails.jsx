@@ -112,7 +112,7 @@ const ToolDetails = () => {
           {/* Main Info */}
           <div>
             <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-end', marginBottom: '2rem', flexWrap: 'wrap' }}>
-              <img src={tool.logo || 'https://picsum.photos/96'} alt={tool.name} style={{ width: '96px', height: '96px', borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: '3px solid var(--bg-main)', boxShadow: var(--shadow-lg) }} />
+              <img src={tool.logo || 'https://picsum.photos/96'} alt={tool.name} style={{ width: '96px', height: '96px', borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: '3px solid var(--bg-main)', boxShadow: 'var(--shadow-lg)' }} />
               <div>
                 <h1 style={{ fontSize: '2.5rem', marginBottom: '0.25rem' }}>{tool.name}</h1>
                 <span style={{
@@ -295,7 +295,7 @@ const ToolDetails = () => {
               width: '100%',
               display: 'flex',
               alignItems: 'center',
-              justify-content: 'center',
+              justifyContent: 'center',
               gap: '0.5rem',
               padding: '0.75rem 1.5rem',
               border: '1px solid var(--border-color)',

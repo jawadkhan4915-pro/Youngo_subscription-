@@ -1,122 +1,111 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import AnnouncementBanner from './components/AnnouncementBanner.jsx';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Public Pages
+import Home from './pages/Public/Home.jsx';
+import AllTools from './pages/Public/AllTools.jsx';
+import ToolDetails from './pages/Public/ToolDetails.jsx';
+import Pricing from './pages/Public/Pricing.jsx';
+import Blogs from './pages/Public/Blogs.jsx';
+import BlogDetails from './pages/Public/BlogDetails.jsx';
+import FAQ from './pages/Public/FAQ.jsx';
+import Contact from './pages/Public/Contact.jsx';
+import Login from './pages/Public/Login.jsx';
+import Register from './pages/Public/Register.jsx';
+import ForgotResetPassword from './pages/Public/ForgotResetPassword.jsx';
+import Privacy from './pages/Public/Privacy.jsx';
+import Terms from './pages/Public/Terms.jsx';
+import Refund from './pages/Public/Refund.jsx';
 
+// User Dashboard Pages
+import UserDashboard from './pages/User/Dashboard.jsx';
+import Playground from './pages/User/Playground.jsx';
+import UserWallet from './pages/User/Wallet.jsx';
+import UserReferral from './pages/User/Referral.jsx';
+import UserSupport from './pages/User/Support.jsx';
+import UserProfile from './pages/User/Profile.jsx';
+
+// Admin Dashboard Pages
+import AdminDashboard from './pages/Admin/Dashboard.jsx';
+import AdminUsers from './pages/Admin/Users.jsx';
+import AdminTools from './pages/Admin/Tools.jsx';
+import AdminOrders from './pages/Admin/Orders.jsx';
+import AdminSupport from './pages/Admin/Support.jsx';
+import AdminSettings from './pages/Admin/Settings.jsx';
+import AdminLogs from './pages/Admin/Logs.jsx';
+
+import './styles/global.css';
+
+// Protected Route Guard (User access)
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Loading credentials...</div>;
+  }
+  
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
+
+// Admin Route Guard (Admin role only)
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+  
+  if (loading) {
+    return <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Checking authorization...</div>;
+  }
+  
+  return isAuthenticated && isAdmin ? children : <Navigate to="/" replace />;
+};
+
+const App = () => {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <AuthProvider>
+      <Router>
+        <AnnouncementBanner />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/tools" element={<AllTools />} />
+          <Route path="/tools/:id" element={<ToolDetails />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/blogs" element={<Blogs />} />
+          <Route path="/blogs/:slug" element={<BlogDetails />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotResetPassword />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/refund" element={<Refund />} />
 
-      <div className="ticks"></div>
+          {/* User Dashboard Protected Routes */}
+          <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+          <Route path="/dashboard/playground" element={<ProtectedRoute><Playground /></ProtectedRoute>} />
+          <Route path="/dashboard/wallet" element={<ProtectedRoute><UserWallet /></ProtectedRoute>} />
+          <Route path="/dashboard/referral" element={<ProtectedRoute><UserReferral /></ProtectedRoute>} />
+          <Route path="/dashboard/support" element={<ProtectedRoute><UserSupport /></ProtectedRoute>} />
+          <Route path="/dashboard/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* Admin Dashboard Protected Routes */}
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/tools" element={<AdminRoute><AdminTools /></AdminRoute>} />
+          <Route path="/admin/categories" element={<AdminRoute><AdminTools /></AdminRoute>} /> {/* Combined panel */}
+          <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+          <Route path="/admin/support" element={<AdminRoute><AdminSupport /></AdminRoute>} />
+          <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+          <Route path="/admin/logs" element={<AdminRoute><AdminLogs /></AdminRoute>} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
+          {/* Fallback 404 Redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+};
 
-export default App
+export default App;

@@ -7,8 +7,8 @@ import Footer from '../../components/Footer.jsx';
 import './public.css';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@youngo.com');
+  const [password, setPassword] = useState('AdminPassword123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -72,6 +72,27 @@ const Login = () => {
               <div className="auth-header">
                 <h2 className="auth-title">Welcome Back</h2>
                 <p className="auth-subtitle">Sign in to your premium AI playground</p>
+                
+                <div style={{
+                  background: 'rgba(79, 70, 229, 0.05)',
+                  border: '1px solid rgba(79, 70, 229, 0.15)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.75rem',
+                  marginTop: '1rem',
+                  fontSize: '0.8rem',
+                  color: 'var(--text-main)',
+                  textAlign: 'left',
+                  cursor: 'pointer'
+                }} onClick={() => {
+                  setEmail('admin@youngo.com');
+                  setPassword('AdminPassword123');
+                }}>
+                  <div style={{ fontWeight: 600, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                    <KeyRound size={12} /> Click to Auto-fill Demo Admin
+                  </div>
+                  <div>Email: <strong style={{ color: 'var(--text-main)' }}>admin@youngo.com</strong></div>
+                  <div>Password: <strong style={{ color: 'var(--text-main)' }}>AdminPassword123</strong></div>
+                </div>
               </div>
 
               {error && (

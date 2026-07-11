@@ -84,7 +84,7 @@ const Footer = () => {
           borderTop: '1px solid var(--border-color)',
           paddingTop: '1.5rem',
           display: 'flex',
-          justify-content: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: '0.85rem',
           color: 'var(--text-muted)',

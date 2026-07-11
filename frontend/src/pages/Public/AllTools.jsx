@@ -4,6 +4,7 @@ import { Search, Sparkles, SlidersHorizontal, ArrowRight } from 'lucide-react';
 import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
 import api from '../../services/api.js';
+import { motion } from 'framer-motion';
 import './public.css';
 
 const AllTools = () => {
