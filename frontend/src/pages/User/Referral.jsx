@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { Users, Copy, Check, Gift, Coins, Share2 } from 'lucide-react';
 import Sidebar from '../../components/Sidebar.jsx';
 import Navbar from '../../components/Navbar.jsx';
+import Footer from '../../components/Footer.jsx';
 import './referral.css'; // Let's write a small local stylesheet if needed, or inline/global
 import '../dashboard.css';
 

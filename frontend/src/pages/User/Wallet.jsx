@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { Wallet, CreditCard, Clock, CheckCircle2, ShieldAlert, ArrowRight, Upload, Search, Percent } from 'lucide-react';
 import Sidebar from '../../components/Sidebar.jsx';
 import Navbar from '../../components/Navbar.jsx';
+import Footer from '../../components/Footer.jsx';
 import api from '../../services/api.js';
 import '../dashboard.css';
 

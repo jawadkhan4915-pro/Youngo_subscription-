@@ -9,6 +9,7 @@ import Announcement from '../models/Announcement.js';
 import AuditLog from '../models/AuditLog.js';
 import Settings from '../models/Settings.js';
 import Wallet from '../models/Wallet.js';
+import Transaction from '../models/Transaction.js';
 import { asyncHandler } from '../middlewares/error.js';
 
 // ==========================================
