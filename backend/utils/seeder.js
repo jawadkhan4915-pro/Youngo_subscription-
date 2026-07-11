@@ -31,6 +31,32 @@ const seedDatabase = async () => {
       console.log(`Admin account created! Email: ${adminEmail} | Password: ${adminPassword}`);
     }
 
+    // Seed Demo User if not exists
+    const demoUserEmail = 'user@youngo.com';
+    const demoUserExists = await User.findOne({ email: demoUserEmail });
+
+    if (!demoUserExists) {
+      console.log('Seeding Demo User Account...');
+      const demoUserPassword = 'UserPassword123';
+      
+      const user = await User.create({
+        name: 'John Doe',
+        email: demoUserEmail,
+        password: demoUserPassword,
+        role: 'User',
+        isVerified: true,
+        referralCode: 'YGO-DEMOUSER'
+      });
+
+      await Wallet.create({
+        user: user._id,
+        totalCredits: 500,
+        loyaltyPoints: 120 // Seed 120 points so they can test loyalty claim immediately
+      });
+
+      console.log(`Demo User account created! Email: ${demoUserEmail} | Password: ${demoUserPassword}`);
+    }
+
     // 2. Seed Categories if empty
     const categoryCount = await Category.countDocuments();
     let chatbotsCat, codingCat, imageCat, voiceCat;

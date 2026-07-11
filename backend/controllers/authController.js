@@ -113,9 +113,13 @@ export const register = asyncHandler(async (req, res, next) => {
     message
   });
 
+  const isMockSmtp = !process.env.SMTP_USER || process.env.SMTP_USER === 'mock_email@gmail.com' || !process.env.SMTP_PASS || process.env.SMTP_PASS === 'mock_password';
+
   res.status(201).json({
     success: true,
-    message: 'Registration successful! Verification OTP sent to email.',
+    message: isMockSmtp
+      ? `Registration successful! [Dev Bypass: Your OTP is ${otp}]`
+      : 'Registration successful! Verification OTP sent to email.',
     email: user.email
   });
 });
@@ -308,9 +312,13 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
     message
   });
 
+  const isMockSmtp = !process.env.SMTP_USER || process.env.SMTP_USER === 'mock_email@gmail.com' || !process.env.SMTP_PASS || process.env.SMTP_PASS === 'mock_password';
+
   res.status(200).json({
     success: true,
-    message: 'Password reset OTP sent to email'
+    message: isMockSmtp
+      ? `Password reset OTP sent. [Dev Bypass: Your OTP is ${resetOTP}]`
+      : 'Password reset OTP sent to email'
   });
 });
 

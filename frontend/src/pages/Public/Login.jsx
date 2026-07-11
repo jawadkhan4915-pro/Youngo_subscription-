@@ -74,24 +74,50 @@ const Login = () => {
                 <p className="auth-subtitle">Sign in to your premium AI playground</p>
                 
                 <div style={{
-                  background: 'rgba(79, 70, 229, 0.05)',
-                  border: '1px solid rgba(79, 70, 229, 0.15)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '0.75rem',
+                  display: 'flex',
+                  gap: '0.5rem',
                   marginTop: '1rem',
-                  fontSize: '0.8rem',
-                  color: 'var(--text-main)',
-                  textAlign: 'left',
-                  cursor: 'pointer'
-                }} onClick={() => {
-                  setEmail('admin@youngo.com');
-                  setPassword('AdminPassword123');
+                  flexDirection: 'column'
                 }}>
-                  <div style={{ fontWeight: 600, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                    <KeyRound size={12} /> Click to Auto-fill Demo Admin
+                  <div style={{
+                    background: 'rgba(79, 70, 229, 0.05)',
+                    border: '1px solid rgba(79, 70, 229, 0.15)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.6rem 0.75rem',
+                    fontSize: '0.8rem',
+                    color: 'var(--text-main)',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }} onClick={() => {
+                    setEmail('admin@youngo.com');
+                    setPassword('AdminPassword123');
+                  }}>
+                    <div style={{ fontWeight: 600, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.15rem' }}>
+                      <KeyRound size={12} /> Auto-fill Demo Admin
+                    </div>
+                    <div>Email: <strong style={{ color: 'var(--text-main)' }}>admin@youngo.com</strong> | Pass: <strong style={{ color: 'var(--text-main)' }}>AdminPassword123</strong></div>
                   </div>
-                  <div>Email: <strong style={{ color: 'var(--text-main)' }}>admin@youngo.com</strong></div>
-                  <div>Password: <strong style={{ color: 'var(--text-main)' }}>AdminPassword123</strong></div>
+
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.05)',
+                    border: '1px solid rgba(16, 185, 129, 0.15)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.6rem 0.75rem',
+                    fontSize: '0.8rem',
+                    color: 'var(--text-main)',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }} onClick={() => {
+                    setEmail('user@youngo.com');
+                    setPassword('UserPassword123');
+                  }}>
+                    <div style={{ fontWeight: 600, color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.15rem' }}>
+                      <KeyRound size={12} /> Auto-fill Demo User
+                    </div>
+                    <div>Email: <strong style={{ color: 'var(--text-main)' }}>user@youngo.com</strong> | Pass: <strong style={{ color: 'var(--text-main)' }}>UserPassword123</strong></div>
+                  </div>
                 </div>
               </div>
 

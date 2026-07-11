@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Sparkles } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext.jsx';
 import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
 import './public.css';
 
 const Pricing = () => {
+  const { isAuthenticated } = useAuth();
   const plans = [
     {
       name: 'Starter',
@@ -88,7 +90,7 @@ const Pricing = () => {
               </div>
 
               <Link
-                to="/register"
+                to={isAuthenticated ? "/dashboard/wallet" : "/register"}
                 className={plan.popular ? 'gradient-btn' : 'form-input'}
                 style={{
                   width: '100%',

@@ -245,3 +245,108 @@ export const updateSettings = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({ success: true, data: setting });
 });
+
+// @desc    Get all public system settings
+// @route   GET /api/settings/public
+// @access  Public
+export const getPublicSettings = asyncHandler(async (req, res, next) => {
+  const keys = ['bank_account', 'easypaisa_number', 'jazzcash_number', 'maintenance_mode'];
+  const settings = await Settings.find({ key: { $in: keys } });
+  
+  const settingsMap = {};
+  // Set default fallbacks matching standard developer config
+  settingsMap['bank_account'] = '1234-5678-9012';
+  settingsMap['easypaisa_number'] = '0300-1234567';
+  settingsMap['jazzcash_number'] = '0312-7654321';
+  settingsMap['maintenance_mode'] = false;
+
+  settings.forEach(s => {
+    settingsMap[s.key] = s.value;
+  });
+
+  res.status(200).json({ success: true, data: settingsMap });
+});
+
+// @desc    Update batch admin settings
+// @route   POST /api/settings/admin/settings/batch
+// @access  Private/Admin
+export const updateBatchSettings = asyncHandler(async (req, res, next) => {
+  const settingsObj = req.body;
+
+  for (const [key, value] of Object.entries(settingsObj)) {
+    // Cast value types properly
+    let finalValue = value;
+    if (key === 'maintenance_mode') {
+      finalValue = value === true || value === 'true';
+    }
+
+    await Settings.findOneAndUpdate(
+      { key },
+      { value: finalValue },
+      { new: true, upsert: true }
+    );
+  }
+
+  await AuditLog.create({
+    admin: req.user.id,
+    action: 'Update_Settings_Batch',
+    details: `Updated settings batch keys: ${Object.keys(settingsObj).join(', ')}`,
+    ipAddress: req.ip
+  });
+
+  res.status(200).json({ success: true, message: 'Settings batch updated successfully' });
+});
+
+// @desc    Redeem loyalty points for wallet credits
+// @route   POST /api/settings/wallet/redeem-loyalty
+// @access  Private
+export const redeemLoyaltyPoints = asyncHandler(async (req, res, next) => {
+  const { points } = req.body;
+  const parsedPoints = Number(points);
+
+  if (!parsedPoints || parsedPoints <= 0 || isNaN(parsedPoints)) {
+    res.status(400);
+    throw new Error('Please enter a valid amount of loyalty points to redeem.');
+  }
+
+  const wallet = await Wallet.findOne({ user: req.user.id });
+  if (!wallet) {
+    res.status(404);
+    throw new Error('Wallet not found');
+  }
+
+  if (wallet.loyaltyPoints < parsedPoints) {
+    res.status(400);
+    throw new Error(`Insufficient loyalty points! You have ${wallet.loyaltyPoints} points, but requested ${parsedPoints}.`);
+  }
+
+  // Conversion: 10 loyalty points = 1 wallet credit
+  const creditsToAward = Math.floor(parsedPoints / 10);
+  if (creditsToAward <= 0) {
+    res.status(400);
+    throw new Error('Conversion failed. A minimum of 10 loyalty points is required to redeem 1 credit.');
+  }
+
+  const pointsUsed = creditsToAward * 10;
+  wallet.loyaltyPoints -= pointsUsed;
+  wallet.totalCredits += creditsToAward;
+  await wallet.save();
+
+  // Audit transaction log
+  await Transaction.create({
+    user: req.user.id,
+    type: 'Loyalty_Claim',
+    amount: creditsToAward,
+    description: `Redeemed ${pointsUsed} loyalty points for ${creditsToAward} wallet credits.`,
+    referenceId: ''
+  });
+
+  res.status(200).json({
+    success: true,
+    message: `Successfully redeemed ${pointsUsed} loyalty points for ${creditsToAward} wallet credits!`,
+    data: {
+      loyaltyPoints: wallet.loyaltyPoints,
+      totalCredits: wallet.totalCredits
+    }
+  });
+});

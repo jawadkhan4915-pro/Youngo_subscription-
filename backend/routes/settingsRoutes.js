@@ -7,11 +7,17 @@ import {
   getActiveAnnouncements,
   createAnnouncement,
   getAuditLogs,
-  updateSettings
+  updateSettings,
+  getPublicSettings,
+  updateBatchSettings,
+  redeemLoyaltyPoints
 } from '../controllers/settingsController.js';
 import { protect, authorize } from '../middlewares/auth.js';
 
 const router = express.Router();
+
+// Public Settings query
+router.get('/public', getPublicSettings);
 
 // Stats endpoints
 router.get('/admin/stats', protect, authorize('Admin'), getAdminDashboardStats);
@@ -28,5 +34,9 @@ router.post('/announcements', protect, authorize('Admin'), createAnnouncement);
 // Audit & Settings endpoints
 router.get('/admin/audit-logs', protect, authorize('Admin'), getAuditLogs);
 router.post('/admin/settings', protect, authorize('Admin'), updateSettings);
+router.post('/admin/settings/batch', protect, authorize('Admin'), updateBatchSettings);
+
+// Wallet points redemption
+router.post('/wallet/redeem-loyalty', protect, redeemLoyaltyPoints);
 
 export default router;

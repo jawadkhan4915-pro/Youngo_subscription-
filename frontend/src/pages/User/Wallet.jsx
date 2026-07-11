@@ -19,10 +19,18 @@ const UserWallet = () => {
 
   const [tools, setTools] = useState([]);
   const [selectedToolId, setSelectedToolId] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Bank Transfer');
   const [transactionId, setTransactionId] = useState('');
   const [receiptFile, setReceiptFile] = useState(null);
   const [couponCode, setCouponCode] = useState('');
   const [discountData, setDiscountData] = useState(null);
+  const [systemSettings, setSystemSettings] = useState(null);
+
+  // Loyalty Points Redemption states
+  const [redeemPoints, setRedeemPoints] = useState('');
+  const [redeemSuccess, setRedeemSuccess] = useState('');
+  const [redeemError, setRedeemError] = useState('');
+  const [redeemLoading, setRedeemLoading] = useState(false);
 
   // Status variables
   const [orders, setOrders] = useState([]);
@@ -60,6 +68,12 @@ const UserWallet = () => {
         const logsRes = await api.get('/usage/my-logs');
         if (logsRes.data?.success) {
           setLogs(logsRes.data.data);
+        }
+
+        // Fetch public system settings
+        const settingsRes = await api.get('/settings/public');
+        if (settingsRes.data?.success) {
+          setSystemSettings(settingsRes.data.data);
         }
       } catch (err) {
         console.error('Failed to load wallet ledger:', err);
@@ -112,7 +126,7 @@ const UserWallet = () => {
     // Build form multipart data
     const formData = new FormData();
     formData.append('items[0][toolId]', selectedToolId);
-    formData.append('paymentMethod', 'Bank Transfer'); // Default manual
+    formData.append('paymentMethod', paymentMethod);
     formData.append('transactionId', transactionId);
     formData.append('receipt', receiptFile);
     if (discountData) {
@@ -146,6 +160,34 @@ const UserWallet = () => {
       setError(err.response?.data?.error || 'Checkout submission failed');
     } finally {
       setCheckoutLoading(false);
+    }
+  };
+
+  const handleRedeemLoyalty = async (e) => {
+    e.preventDefault();
+    setRedeemError('');
+    setRedeemSuccess('');
+    setRedeemLoading(true);
+
+    try {
+      const res = await api.post('/settings/wallet/redeem-loyalty', { points: redeemPoints });
+      if (res.data?.success) {
+        setRedeemSuccess(res.data.message);
+        setRedeemPoints('');
+        
+        // Sync user wallet statistics context
+        await fetchMe();
+
+        // Refresh orders and transactions list if necessary
+        const logsRes = await api.get('/usage/my-logs');
+        if (logsRes.data?.success) {
+          setLogs(logsRes.data.data);
+        }
+      }
+    } catch (err) {
+      setRedeemError(err.response?.data?.error || 'Loyalty redemption failed');
+    } finally {
+      setRedeemLoading(false);
     }
   };
 
@@ -230,19 +272,19 @@ const UserWallet = () => {
               <div className="bank-account-box">
                 <h5 style={{ marginBottom: '0.25rem' }}>Standard Chartered Bank</h5>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Title: Youngo Subscription Services</p>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 600, marginTop: '0.25rem' }}>Account No: 1234-5678-9012 (IBAN available)</p>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 600, marginTop: '0.25rem' }}>Account No: {systemSettings?.bank_account || '1234-5678-9012'} (IBAN available)</p>
               </div>
 
               <div className="bank-account-box" style={{ borderColor: 'var(--color-secondary)' }}>
                 <h5 style={{ marginBottom: '0.25rem' }}>EasyPaisa Mobile Cash</h5>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Title: Jawad Khan</p>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Phone: 0300-1234567</p>
+                <p style={{ fontSize: '0.9rem', color: 'var(--color-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Phone: {systemSettings?.easypaisa_number || '0300-1234567'}</p>
               </div>
 
               <div className="bank-account-box" style={{ borderColor: 'var(--color-accent)' }}>
                 <h5 style={{ marginBottom: '0.25rem' }}>JazzCash Mobile Cash</h5>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Title: Jawad Khan</p>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-accent)', fontWeight: 600, marginTop: '0.25rem' }}>Phone: 0312-7654321</p>
+                <p style={{ fontSize: '0.9rem', color: 'var(--color-accent)', fontWeight: 600, marginTop: '0.25rem' }}>Phone: {systemSettings?.jazzcash_number || '0312-7654321'}</p>
               </div>
             </div>
 
@@ -296,6 +338,19 @@ const UserWallet = () => {
                           {t.name} ({t.price} PKR - {t.creditsPerPurchase} cr)
                         </option>
                       ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Select Payment Method</label>
+                    <select
+                      className="form-input"
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    >
+                      <option value="Bank Transfer">Bank Transfer (Standard Chartered)</option>
+                      <option value="EasyPaisa">EasyPaisa Mobile Cash</option>
+                      <option value="JazzCash">JazzCash Mobile Cash</option>
                     </select>
                   </div>
 
@@ -380,6 +435,39 @@ const UserWallet = () => {
               )}
             </div>
 
+          </div>
+
+          {/* Loyalty Points Redemption card */}
+          <div className="glass-card" style={{ padding: '2rem', marginBottom: '3rem', maxWidth: '600px' }}>
+            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Percent size={18} style={{ color: 'var(--color-accent)' }} /> Redeem Loyalty Points</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+              Convert your loyalty points into wallet credits. **10 Loyalty Points = 1 Credit**.
+            </p>
+
+            {redeemSuccess && <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid var(--color-success)', color: 'var(--color-success)', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>{redeemSuccess}</div>}
+            {redeemError && <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--color-danger)', color: 'var(--color-danger)', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>{redeemError}</div>}
+
+            <form onSubmit={handleRedeemLoyalty} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <label className="form-label">Points to Redeem (Multiples of 10)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="e.g. 50"
+                  min={10}
+                  step={10}
+                  value={redeemPoints}
+                  onChange={(e) => setRedeemPoints(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit" disabled={redeemLoading || !redeemPoints} className="gradient-btn" style={{ padding: '0.75rem 1.5rem', height: '42px' }}>
+                {redeemLoading ? 'Redeeming...' : 'Convert Points'}
+              </button>
+            </form>
+            <span style={{ display: 'block', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Current Balance: <strong>{wallet?.loyaltyPoints || 0} pts</strong> (Worth: <strong>{Math.floor((wallet?.loyaltyPoints || 0) / 10)} credits</strong>)
+            </span>
           </div>
 
           {/* Billing Order History */}
