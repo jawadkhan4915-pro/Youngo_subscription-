@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Order from '../models/Order.js';
 import AITool from '../models/AITool.js';
@@ -143,6 +144,55 @@ export const getUserDashboardStats = asyncHandler(async (req, res, next) => {
     .sort('-createdAt')
     .limit(5);
 
+  // 7-day daily usage aggregation
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const dailyUsage = await UsageLog.aggregate([
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(userId),
+        createdAt: { $gte: sevenDaysAgo }
+      }
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        creditsSpent: { $sum: "$creditsDeducted" },
+        requestsCount: { $sum: 1 }
+      }
+    },
+    { $sort: { _id: 1 } }
+  ]);
+
+  // Tool usage distribution aggregation
+  const toolUsage = await UsageLog.aggregate([
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(userId)
+      }
+    },
+    {
+      $group: {
+        _id: "$tool",
+        creditsSpent: { $sum: "$creditsDeducted" },
+        requestsCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const populatedToolUsage = await Promise.all(
+    toolUsage.map(async (item) => {
+      const toolInfo = await AITool.findById(item._id).select('name logo');
+      return {
+        toolName: toolInfo ? toolInfo.name : 'Unknown',
+        creditsSpent: item.creditsSpent,
+        requestsCount: item.requestsCount
+      };
+    })
+  );
+
   res.status(200).json({
     success: true,
     data: {
@@ -154,7 +204,9 @@ export const getUserDashboardStats = asyncHandler(async (req, res, next) => {
       activeSubscriptions,
       ordersCount,
       totalRequests,
-      recentLogs
+      recentLogs,
+      dailyUsage,
+      toolUsage: populatedToolUsage
     }
   });
 });

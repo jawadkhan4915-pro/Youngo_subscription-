@@ -2,6 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Coins, Sparkles, AlertTriangle, ArrowRight, HelpCircle, Activity, LayoutDashboard, Cpu } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
 import Sidebar from '../../components/Sidebar.jsx';
 import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
@@ -31,6 +44,47 @@ const UserDashboard = () => {
 
     fetchDashboardStats();
   }, []);
+
+  const COLORS = ['#6366f1', '#a855f7', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+
+  const getDailyUsageData = () => {
+    if (!stats || !stats.dailyUsage) return [];
+    
+    // Generate an array of the last 7 dates in YYYY-MM-DD format
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const date = String(d.getDate()).padStart(2, '0');
+      dates.push(`${year}-${month}-${date}`);
+    }
+
+    // Map each date to either the aggregated database value or 0
+    return dates.map(dateStr => {
+      const dbRecord = stats.dailyUsage.find(item => item._id === dateStr);
+      const d = new Date(dateStr);
+      const formattedLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return {
+        date: dateStr,
+        displayDate: formattedLabel,
+        credits: dbRecord ? dbRecord.creditsSpent : 0,
+        requests: dbRecord ? dbRecord.requestsCount : 0
+      };
+    });
+  };
+
+  const getToolUsageData = () => {
+    if (!stats || !stats.toolUsage || stats.toolUsage.length === 0) {
+      return [];
+    }
+    return stats.toolUsage.map(item => ({
+      name: item.toolName,
+      value: item.creditsSpent || 0,
+      requests: item.requestsCount || 0
+    })).filter(item => item.value > 0);
+  };
 
   return (
     <>
@@ -86,6 +140,121 @@ const UserDashboard = () => {
                   </div>
                   <div className="stat-icon" style={{ background: 'rgba(34, 197, 94, 0.1)', color: 'var(--color-success)' }}><Sparkles size={20} /></div>
                 </div>
+              </div>
+
+              {/* Analytics & Charts Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '2.5rem' }}>
+                
+                {/* Credit Usage History Chart */}
+                <div className="glass-card" style={{ padding: '2rem', minHeight: '340px', display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ fontSize: '1.15rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Activity size={18} style={{ color: 'var(--color-primary)' }} /> Credit Consumption (Last 7 Days)
+                  </h3>
+                  <div style={{ flex: 1, width: '100%', height: '240px' }}>
+                    {getDailyUsageData().length === 0 ? (
+                      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                        Syncing analytics...
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={getDailyUsageData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorCredits" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" vertical={false} />
+                          <XAxis 
+                            dataKey="displayDate" 
+                            stroke="var(--text-muted)" 
+                            fontSize={11}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis 
+                            stroke="var(--text-muted)" 
+                            fontSize={11}
+                            tickLine={false}
+                            axisLine={false}
+                            allowDecimals={false}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              background: 'rgba(15, 23, 42, 0.9)', 
+                              border: '1px solid var(--border-color)', 
+                              borderRadius: '8px',
+                              color: 'var(--text-main)',
+                              fontSize: '12px'
+                            }}
+                            labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="credits" 
+                            name="Credits Spent"
+                            stroke="var(--color-primary)" 
+                            strokeWidth={2}
+                            fillOpacity={1} 
+                            fill="url(#colorCredits)" 
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tool Distribution Chart */}
+                <div className="glass-card" style={{ padding: '2rem', minHeight: '340px', display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ fontSize: '1.15rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Cpu size={18} style={{ color: 'var(--color-secondary)' }} /> Expenditure by AI Node
+                  </h3>
+                  <div style={{ flex: 1, width: '100%', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {getToolUsageData().length === 0 ? (
+                      <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                        <LayoutDashboard size={32} style={{ margin: '0 auto 1rem auto', opacity: 0.5 }} />
+                        No usage statistics recorded yet.
+                        <p style={{ fontSize: '0.78rem', marginTop: '0.25rem' }}>Spend credits in the sandbox to populate chart.</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={getToolUsageData()}
+                            cx="50%"
+                            cy="45%"
+                            innerRadius={50}
+                            outerRadius={70}
+                            paddingAngle={4}
+                            dataKey="value"
+                          >
+                            {getToolUsageData().map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              background: 'rgba(15, 23, 42, 0.9)',
+                              border: '1px solid var(--border-color)',
+                              borderRadius: '8px',
+                              color: 'var(--text-main)',
+                              fontSize: '12px'
+                            }}
+                            formatter={(value, name, props) => [`${value} Credits (${props.payload.requests} requests)`, 'Spent']}
+                          />
+                          <Legend 
+                            verticalAlign="bottom" 
+                            height={36} 
+                            iconType="circle"
+                            iconSize={8}
+                            wrapperStyle={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '10px' }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', alignItems: 'start' }}>

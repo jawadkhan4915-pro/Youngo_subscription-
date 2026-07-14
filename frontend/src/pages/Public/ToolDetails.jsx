@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { Sparkles, MessageSquare, AlertCircle, Play, Star, ArrowRight, ShieldCheck, Heart } from 'lucide-react';
+import { Sparkles, MessageSquare, AlertCircle, Play, Star, ArrowRight, ShieldCheck, Heart, CheckCircle2 } from 'lucide-react';
 import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
 import api from '../../services/api.js';
