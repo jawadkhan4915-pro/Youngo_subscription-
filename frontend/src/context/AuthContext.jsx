@@ -10,19 +10,22 @@ export const AuthProvider = ({ children }) => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   // Load current user profile on startup
-  const fetchMe = async () => {
+  // silent=true skips the loading spinner — prevents ProtectedRoute from unmounting active pages
+  const fetchMe = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const res = await api.get('/auth/me');
       if (res.data?.success) {
         setUser(res.data.user);
         setWallet(res.data.wallet);
       }
     } catch (err) {
-      setUser(null);
-      setWallet(null);
+      if (!silent) {
+        setUser(null);
+        setWallet(null);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 

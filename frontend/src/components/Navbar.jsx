@@ -27,8 +27,16 @@ const Navbar = () => {
       };
 
       fetchNotifications();
-      const interval = setInterval(fetchNotifications, 60000); // Check every 60s
-      return () => clearInterval(interval);
+      const interval = setInterval(fetchNotifications, 30000); // Check every 30s
+
+      // Listen for custom notification-read events from notification page
+      const handleNotificationsRead = () => setUnreadNotifications(0);
+      window.addEventListener('notifications-marked-read', handleNotificationsRead);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('notifications-marked-read', handleNotificationsRead);
+      };
     }
   }, [isAuthenticated]);
 

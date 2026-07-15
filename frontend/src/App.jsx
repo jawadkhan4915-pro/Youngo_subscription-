@@ -35,6 +35,12 @@ import AdminOrders from './pages/Admin/Orders.jsx';
 import AdminSupport from './pages/Admin/Support.jsx';
 import AdminSettings from './pages/Admin/Settings.jsx';
 import AdminLogs from './pages/Admin/Logs.jsx';
+import AdminCoupons from './pages/Admin/Coupons.jsx';
+import AdminAnnouncements from './pages/Admin/Announcements.jsx';
+
+// User Extra Pages
+import UserNotifications from './pages/User/Notifications.jsx';
+import UserPurchases from './pages/User/Purchases.jsx';
 
 import './styles/global.css';
 
@@ -86,9 +92,11 @@ const App = () => {
           <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
           <Route path="/dashboard/playground" element={<ProtectedRoute><Playground /></ProtectedRoute>} />
           <Route path="/dashboard/wallet" element={<ProtectedRoute><UserWallet /></ProtectedRoute>} />
+          <Route path="/dashboard/purchases" element={<ProtectedRoute><UserPurchases /></ProtectedRoute>} />
           <Route path="/dashboard/referral" element={<ProtectedRoute><UserReferral /></ProtectedRoute>} />
           <Route path="/dashboard/support" element={<ProtectedRoute><UserSupport /></ProtectedRoute>} />
           <Route path="/dashboard/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+          <Route path="/dashboard/notifications" element={<ProtectedRoute><UserNotifications /></ProtectedRoute>} />
 
           {/* Admin Dashboard Protected Routes */}
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
@@ -96,9 +104,12 @@ const App = () => {
           <Route path="/admin/tools" element={<AdminRoute><AdminTools /></AdminRoute>} />
           <Route path="/admin/categories" element={<AdminRoute><AdminTools /></AdminRoute>} /> {/* Combined panel */}
           <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+          <Route path="/admin/coupons" element={<AdminRoute><AdminCoupons /></AdminRoute>} />
+          <Route path="/admin/announcements" element={<AdminRoute><AdminAnnouncements /></AdminRoute>} />
           <Route path="/admin/support" element={<AdminRoute><AdminSupport /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
           <Route path="/admin/logs" element={<AdminRoute><AdminLogs /></AdminRoute>} />
+          <Route path="/admin/blogs" element={<AdminRoute><AdminLogs /></AdminRoute>} /> {/* Placeholder - redirects to logs */}
 
           {/* Fallback 404 Redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
