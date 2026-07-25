@@ -1,65 +1,71 @@
 /* CSS Variables - Design Tokens */
 :root {
   /* Fonts */
-  --font-primary: 'Inter', sans-serif;
-  --font-secondary: 'Poppins', sans-serif;
+  --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-secondary: 'Poppins', system-ui, sans-serif;
 
-  /* Colors (Dark Theme Default) */
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-secondary: #7c3aed;
+  /* Colors (Electric Sapphire & Deep Cobalt Theme) */
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-secondary: #8b5cf6;
+  --color-secondary-hover: #7c3aed;
   --color-accent: #06b6d4;
-  --color-success: #22c55e;
-  --color-danger: #ef4444;
+  --color-accent-emerald: #10b981;
+  --color-success: #10b981;
+  --color-danger: #f43f5e;
   --color-warning: #f59e0b;
 
-  /* Theme Dependent (Dark) */
-  --bg-main: #0f172a;
-  --bg-card: #1e293b;
-  --bg-card-hover: #2d3748;
-  --bg-input: #1e293b;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-color-hover: rgba(255, 255, 255, 0.2);
+  /* Theme Dependent (Dark Mode Default) */
+  --bg-main: #070a12;
+  --bg-card: #0e1628;
+  --bg-card-hover: #152038;
+  --bg-input: #0f182c;
+  --border-color: rgba(99, 102, 241, 0.16);
+  --border-color-hover: rgba(99, 102, 241, 0.4);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --text-inverse: #0f172a;
+  --text-inverse: #070a12;
   
-  /* Glassmorphism Styles */
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: blur(16px);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  /* Glassmorphism & Glow Styles */
+  --glass-bg: rgba(14, 22, 40, 0.72);
+  --glass-border: rgba(99, 102, 241, 0.2);
+  --glass-blur: blur(18px);
+  --glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+  --glow-primary: 0 0 25px rgba(99, 102, 241, 0.35);
+  --glow-accent: 0 0 25px rgba(6, 182, 212, 0.35);
 
   /* Shadows & Radius */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 6px 12px -2px rgba(0, 0, 0, 0.25), 0 3px 6px -2px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 16px 24px -4px rgba(0, 0, 0, 0.35), 0 6px 8px -4px rgba(0, 0, 0, 0.2);
+  --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(99, 102, 241, 0.2);
   
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
   --radius-full: 9999px;
 
   /* Layout */
-  --max-width: 1200px;
+  --max-width: 1240px;
   --transition-speed: 0.3s;
 }
 
 /* Light Theme Variables */
 [data-theme='light'] {
-  --bg-main: #f8fafc;
+  --bg-main: #f4f6fb;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --bg-input: #f1f5f9;
-  --border-color: rgba(15, 23, 42, 0.08);
-  --border-color-hover: rgba(15, 23, 42, 0.15);
+  --bg-card-hover: #f0f3fa;
+  --bg-input: #f0f3fa;
+  --border-color: rgba(99, 102, 241, 0.15);
+  --border-color-hover: rgba(99, 102, 241, 0.35);
   --text-main: #0f172a;
   --text-muted: #64748b;
-  --text-inverse: #f8fafc;
+  --text-inverse: #ffffff;
 
   /* Light Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(15, 23, 42, 0.08);
-  --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(99, 102, 241, 0.18);
+  --glass-shadow: 0 10px 30px 0 rgba(99, 102, 241, 0.12);
+  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.2);
+  --glow-accent: 0 0 20px rgba(6, 182, 212, 0.2);
 }
