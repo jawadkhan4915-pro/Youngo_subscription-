@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Sun, Moon, LogOut, LayoutDashboard, Bell, User, Menu, X, Sparkles } from 'lucide-react';
+import LanguageTranslator from './LanguageTranslator.jsx';
 import api from '../services/api.js';
 import './components.css';
 
@@ -136,6 +137,7 @@ const Navbar = () => {
         transition={{ duration: 0.4, delay: 0.4 }}
         className="nav-actions"
       >
+        <LanguageTranslator />
         <button onClick={toggleTheme} className="theme-toggle" title="Toggle Theme">
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>

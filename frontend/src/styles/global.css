@@ -8,12 +8,34 @@
   font-family: var(--font-primary);
 }
 
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 body {
   background-color: var(--bg-main);
   color: var(--text-main);
   min-height: 100vh;
   overflow-x: hidden;
+  overflow-y: visible;
+  position: static !important;
+  top: 0px !important;
   transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+/* Hide Google Translate Top Banner, Iframes & Tooltips to prevent double scrollbars */
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.goog-te-spinner-pos {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.skiptranslate {
+  display: none !important;
 }
 
 h1, h2, h3, h4, h5, h6 {

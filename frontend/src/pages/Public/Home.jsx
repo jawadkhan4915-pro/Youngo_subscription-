@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
@@ -20,12 +20,14 @@ import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
 import TiltCard from '../../components/TiltCard.jsx';
 import Hero3DCanvas from '../../components/Hero3DCanvas.jsx';
+import AIAgentsMarquee from '../../components/AIAgentsMarquee.jsx';
 import api from '../../services/api.js';
 import './public.css';
 
 const Home = () => {
   const [tools, setTools] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTools = async () => {
@@ -149,6 +151,9 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Supported AI Agents Showcase */}
+      <AIAgentsMarquee />
+
       {/* 2. Popular AI Tools 3D Catalog */}
       <section className="slider-section">
         <div className="container">
@@ -172,7 +177,14 @@ const Home = () => {
               className="tools-grid"
             >
               {tools.map((tool) => (
-                <TiltCard key={tool._id} maxTilt={10} depth={20} className="tool-card-wrapper">
+                <TiltCard 
+                  key={tool._id} 
+                  maxTilt={10} 
+                  depth={20} 
+                  className="tool-card-wrapper"
+                  onClick={() => navigate(`/tools/${tool._id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="glass-card tool-card">
                     <div className="tool-card-top">
                       <img src={tool.logo || 'https://picsum.photos/48'} alt={tool.name} className="tool-logo" />

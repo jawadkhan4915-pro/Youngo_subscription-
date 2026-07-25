@@ -655,15 +655,26 @@
 .tool-link-btn {
   color: var(--color-primary);
   font-weight: 600;
-  font-size: 0.88rem;
-  display: flex;
+  font-size: 0.85rem;
+  display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  transition: gap 0.2s ease;
+  gap: 0.3rem;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 20;
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  text-decoration: none;
 }
 
 .tool-link-btn:hover {
-  gap: 0.4rem;
+  background: rgba(99, 102, 241, 0.22);
+  border-color: var(--color-primary);
+  transform: translateX(2px);
+  color: #ffffff;
 }
 
 /* 3. Features Section */
@@ -1083,3 +1094,236 @@
 .password-toggle-btn:hover {
   color: var(--text-main);
 }
+
+/* Multi-Column Responsive Layouts for Pricing, Blogs, and AI Agents */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.75rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+@media (max-width: 1200px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pricing-card {
+  padding: 2.25rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  position: relative;
+}
+
+.pricing-card.popular {
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 0 35px rgba(99, 102, 241, 0.25);
+  background: linear-gradient(180deg, rgba(14, 22, 40, 0.95), rgba(99, 102, 241, 0.1));
+}
+
+.popular-badge {
+  position: absolute;
+  top: -14px;
+  right: 20px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.85rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.plan-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.plan-price {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  letter-spacing: -0.03em;
+}
+
+.plan-price span {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.plan-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Blogs Grid Multi-Column */
+.blogs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 2rem;
+  width: 100%;
+}
+
+.blog-card {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.blog-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.blog-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.blog-title {
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.35;
+}
+
+.blog-summary {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 1.5rem;
+}
+
+.blog-meta-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* AI Agents Badges Grid */
+.agent-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.agent-badge-card {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.agent-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.agent-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.agent-provider {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.agent-tag {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: rgba(6, 182, 212, 0.1);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Custom Plan Dynamic Selector */
+.custom-plan-card {
+  background: linear-gradient(135deg, rgba(14, 22, 40, 0.95), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.ai-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.ai-chip {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.ai-chip.selected {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: var(--color-accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+

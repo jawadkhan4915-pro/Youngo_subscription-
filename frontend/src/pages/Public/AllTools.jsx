@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Sparkles, SlidersHorizontal, ArrowRight, ChevronRight } from 'lucide-react';
 import Navbar from '../../components/Navbar.jsx';
@@ -12,6 +11,7 @@ const AllTools = () => {
   const [tools, setTools] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -155,7 +155,14 @@ const AllTools = () => {
             className="tools-grid"
           >
             {filteredTools.map((tool) => (
-              <TiltCard key={tool._id} maxTilt={10} depth={20} className="tool-card-wrapper">
+              <TiltCard 
+                key={tool._id} 
+                maxTilt={10} 
+                depth={20} 
+                className="tool-card-wrapper"
+                onClick={() => navigate(`/tools/${tool._id}`)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="glass-card tool-card">
                   <div className="tool-card-top">
                     <img src={tool.logo || 'https://picsum.photos/48'} alt={tool.name} className="tool-logo" />
