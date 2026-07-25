@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Sparkles, SlidersHorizontal, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Search, Sparkles, SlidersHorizontal, ArrowRight, ChevronRight } from 'lucide-react';
 import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
+import TiltCard from '../../components/TiltCard.jsx';
 import api from '../../services/api.js';
-import { motion } from 'framer-motion';
 import './public.css';
 
 const AllTools = () => {
@@ -15,18 +16,15 @@ const AllTools = () => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  // Fetch tools & categories
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Load categories
         const catRes = await api.get('/tools/categories');
         if (catRes.data?.success) {
           setCategories(catRes.data.data);
         }
 
-        // Load tools
         const toolRes = await api.get('/tools');
         if (toolRes.data?.success) {
           setTools(toolRes.data.data);
@@ -41,7 +39,6 @@ const AllTools = () => {
     fetchData();
   }, []);
 
-  // Filter tools
   const filteredTools = tools.filter((tool) => {
     const matchesSearch = tool.name.toLowerCase().includes(search.toLowerCase()) || 
                           tool.description.toLowerCase().includes(search.toLowerCase());
@@ -51,27 +48,59 @@ const AllTools = () => {
     return matchesSearch && matchesCategory;
   });
 
-  return (
-    <>
-      <Navbar />
-      <div className="container" style={{ padding: '3rem 1.5rem min-height: 80vh' }}>
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>AI Subscription Library</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Unlock access to the worlds leading AI systems, billed transparently via credit wallets.</p>
-        </div>
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
 
-        {/* Filter controls */}
-        <div className="glass-card" style={{ padding: '1rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', flex: 1, paddingBottom: '0.25rem' }}>
+  return (
+    <div className="landing-wrapper">
+      <Navbar />
+
+      <div className="hero-mesh-bg" />
+      <div className="hero-grid-overlay" />
+
+      <div className="container" style={{ padding: '4rem 1.5rem 6rem 1.5rem', minHeight: '80vh', position: 'relative', zIndex: 5 }}>
+        
+        {/* Page Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="section-header"
+        >
+          <span className="hero-badge">
+            <Sparkles size={14} className="text-indigo-400" /> Unified Catalog
+          </span>
+          <h1 className="section-title">
+            AI Subscription <span className="highlight-gradient">Library</span>
+          </h1>
+          <p className="section-desc">
+            Unlock access to leading conversational, code, image, and voice models with wallet credits.
+          </p>
+        </motion.div>
+
+        {/* Filter Controls */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="glass-card" 
+          style={{ padding: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '1.25rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3rem' }}
+        >
+          <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', flex: 1, paddingBottom: '0.25rem' }}>
             <button
               onClick={() => setSelectedCategory('')}
-              className={`gradient-btn`}
+              className="glass-btn"
               style={{
-                background: selectedCategory === '' ? 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' : 'none',
+                background: selectedCategory === '' ? 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' : 'rgba(99, 102, 241, 0.06)',
                 color: selectedCategory === '' ? '#fff' : 'var(--text-muted)',
-                border: selectedCategory === '' ? 'none' : '1px solid var(--border-color)',
-                padding: '0.5rem 1rem',
-                fontSize: '0.85rem'
+                borderColor: selectedCategory === '' ? 'transparent' : 'var(--border-color)',
+                padding: '0.55rem 1.25rem',
+                fontSize: '0.88rem'
               }}
             >
               All Categories
@@ -80,13 +109,13 @@ const AllTools = () => {
               <button
                 key={cat._id}
                 onClick={() => setSelectedCategory(cat._id)}
-                className={`gradient-btn`}
+                className="glass-btn"
                 style={{
-                  background: selectedCategory === cat._id ? 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' : 'none',
+                  background: selectedCategory === cat._id ? 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' : 'rgba(99, 102, 241, 0.06)',
                   color: selectedCategory === cat._id ? '#fff' : 'var(--text-muted)',
-                  border: selectedCategory === cat._id ? 'none' : '1px solid var(--border-color)',
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.85rem'
+                  borderColor: selectedCategory === cat._id ? 'transparent' : 'var(--border-color)',
+                  padding: '0.55rem 1.25rem',
+                  fontSize: '0.88rem'
                 }}
               >
                 {cat.name}
@@ -94,85 +123,67 @@ const AllTools = () => {
             ))}
           </div>
 
-          <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '320px' }}>
             <input
               type="text"
               placeholder="Search AI Tools..."
-              className="form-input"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: '2.5rem', paddingRight: '1rem' }}
+              className="form-input"
+              style={{ paddingLeft: '2.5rem' }}
             />
             <Search size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
           </div>
-        </div>
+        </motion.div>
 
-        {/* Tools grid */}
+        {/* Tools Catalog 3D Grid */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>Syncing available licenses...</div>
+          <div className="catalog-loading">
+            <div className="loading-spinner"></div>
+            <span>Loading AI Library...</span>
+          </div>
         ) : filteredTools.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '5rem', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)' }}>
-            <h3 style={{ marginBottom: '0.5rem' }}>No AI Tools Found</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Try refining your search text or selected category filter.</p>
+          <div className="glass-card" style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <h3>No AI Tools Matched</h3>
+            <p style={{ marginTop: '0.5rem' }}>Try clearing your category filter or search query.</p>
           </div>
         ) : (
-          <div className="grid-cols-3" style={{ marginBottom: '5rem' }}>
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+            className="tools-grid"
+          >
             {filteredTools.map((tool) => (
-              <motion.div
-                key={tool._id}
-                whileHover={{ y: -4 }}
-                className="glass-card tool-card"
-                style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
-              >
-                <div>
-                  <div className="tool-header">
+              <TiltCard key={tool._id} maxTilt={10} depth={20} className="tool-card-wrapper">
+                <div className="glass-card tool-card">
+                  <div className="tool-card-top">
                     <img src={tool.logo || 'https://picsum.photos/48'} alt={tool.name} className="tool-logo" />
                     <div className="tool-meta">
-                      <span className="tool-name">{tool.name}</span>
-                      <span className="tool-cat">{tool.category?.name || 'AI tool'}</span>
+                      <h3 className="tool-name">{tool.name}</h3>
+                      <span className="tool-cat-badge">{tool.category?.name || 'AI Assistant'}</span>
                     </div>
-                    <span style={{
-                      marginLeft: 'auto',
-                      fontSize: '0.75rem',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: 'var(--radius-full)',
-                      background: tool.status === 'Available' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                      color: tool.status === 'Available' ? 'var(--color-success)' : 'var(--color-warning)',
-                      border: `1px solid ${tool.status === 'Available' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
-                    }}>
-                      {tool.status}
-                    </span>
                   </div>
-                  <p className="tool-desc" style={{ height: '4rem', marginBottom: '1rem' }}>{tool.description}</p>
-                  
-                  {tool.features?.length > 0 && (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.5rem 0', display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      {tool.features.slice(0, 2).map((feat, idx) => (
-                        <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Sparkles size={12} style={{ color: 'var(--color-primary)' }} />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div className="tool-price-row" style={{ paddingTop: '1rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sub cost</span>
-                    <span className="tool-price" style={{ fontSize: '1.2rem' }}>{tool.price} PKR</span>
+                  <p className="tool-desc">{tool.description}</p>
+                  <div className="tool-card-bottom">
+                    <div className="tool-price-tag">
+                      <span className="price-num">{tool.price} PKR</span>
+                      <span className="price-unit">/ {tool.creditsPerPurchase} cr</span>
+                    </div>
+                    <Link to={`/tools/${tool._id}`} className="tool-link-btn">
+                      <span>Details</span>
+                      <ChevronRight size={15} />
+                    </Link>
                   </div>
-                  <Link to={`/tools/${tool._id}`} className="gradient-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
-                    View Plan <ArrowRight size={14} />
-                  </Link>
                 </div>
-              </motion.div>
+              </TiltCard>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
+
       <Footer />
-    </>
+    </div>
   );
 };
 

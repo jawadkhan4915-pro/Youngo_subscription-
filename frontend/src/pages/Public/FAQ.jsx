@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { HelpCircle, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
+import TiltCard from '../../components/TiltCard.jsx';
 import api from '../../services/api.js';
 import './public.css';
 
@@ -10,7 +12,6 @@ const FAQ = () => {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fallback default FAQs if database is empty
   const fallbackFaqs = [
     {
       question: 'What is Youngo Subscription Sharing?',
@@ -58,35 +59,92 @@ const FAQ = () => {
   };
 
   return (
-    <>
+    <div className="landing-wrapper">
       <Navbar />
-      <div className="container" style={{ padding: '4rem 1.5rem', minHeight: '80vh' }}>
-        <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>Frequently Asked Questions</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Quick answers to questions about credit allocation, payments, and playground features.</p>
-        </div>
 
-        <div className="faq-grid">
-          {faqs.map((faq, idx) => (
-            <div key={idx} className="faq-item glass-card">
-              <button className="faq-question" onClick={() => toggleExpand(idx)}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <HelpCircle size={18} style={{ color: 'var(--color-primary)' }} />
-                  {faq.question}
-                </span>
-                {expandedIndex === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-              </button>
-              {expandedIndex === idx && (
-                <div className="faq-answer">
-                  <p>{faq.answer}</p>
+      <div className="hero-mesh-bg" />
+      <div className="hero-grid-overlay" />
+
+      <div className="container" style={{ padding: '4rem 1.5rem 6rem 1.5rem', minHeight: '80vh', position: 'relative', zIndex: 5 }}>
+        
+        {/* Page Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="section-header"
+        >
+          <span className="hero-badge">
+            <Sparkles size={14} className="text-indigo-400" /> Help Center
+          </span>
+          <h1 className="section-title">
+            Frequently Asked <span className="highlight-gradient">Questions</span>
+          </h1>
+          <p className="section-desc">
+            Quick answers about credit allocation, manual receipt verification, and playground access.
+          </p>
+        </motion.div>
+
+        {loading ? (
+          <div className="catalog-loading">
+            <div className="loading-spinner"></div>
+            <span>Loading FAQs...</span>
+          </div>
+        ) : (
+          <div className="faq-grid" style={{ maxWidth: '820px', margin: '0 auto' }}>
+            {faqs.map((faq, idx) => (
+              <TiltCard key={idx} maxTilt={4} depth={10} glare={false}>
+                <div className="faq-item glass-card" style={{ marginBottom: '1.25rem', padding: '1.25rem 1.5rem' }}>
+                  <button 
+                    className="faq-question" 
+                    onClick={() => toggleExpand(idx)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-main)',
+                      fontSize: '1.05rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                      <HelpCircle size={20} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                      {faq.question}
+                    </span>
+                    {expandedIndex === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </button>
+
+                  <AnimatePresence>
+                    {expandedIndex === idx && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="faq-answer"
+                        style={{ overflow: 'hidden', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}
+                      >
+                        <p style={{ color: 'var(--text-muted)', lineHeight: '1.65', fontSize: '0.95rem' }}>
+                          {faq.answer}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+              </TiltCard>
+            ))}
+          </div>
+        )}
+
       </div>
+
       <Footer />
-    </>
+    </div>
   );
 };
 
