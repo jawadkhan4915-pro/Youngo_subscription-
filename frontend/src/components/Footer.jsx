@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Sparkles, Mail, Send, Github, Twitter, MessageCircle } from 'lucide-react';
 import './components.css';
 
@@ -9,15 +10,39 @@ const Footer = () => {
     alert('Thank you for subscribing to our newsletter!');
   };
 
+  const footerContainerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.12,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20, filter: 'blur(4px)' },
+    visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.5, ease: 'easeOut' } }
+  };
+
   return (
     <footer className="main-footer">
-      <div className="container">
+      <motion.div 
+        className="container"
+        variants={footerContainerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-40px' }}
+      >
         <div className="footer-grid">
-          {/* Col 1: Brand details */}
-          <div className="footer-col">
+          {/* Col 1: Brand details with typography reveal */}
+          <motion.div variants={itemVariants} className="footer-col">
             <Link to="/" className="nav-brand" style={{ padding: 0 }}>
-              <Sparkles size={20} />
-              <span>Youngo</span>
+              <Sparkles size={20} className="text-indigo-400" />
+              <span className="text-reveal-gradient">Youngo</span>
             </Link>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6' }}>
               The premium MERN AI Subscription Sharing Platform. Get secure, credit-allocated access to leading industry tools at a fraction of the cost.
@@ -27,10 +52,10 @@ const Footer = () => {
               <a href="#" className="theme-toggle" aria-label="Twitter"><Twitter size={18} /></a>
               <a href="#" className="theme-toggle" aria-label="Discord"><MessageCircle size={18} /></a>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Col 2: Navigation Links */}
-          <div className="footer-col">
+          {/* Col 2: Navigation Links with reveal animation */}
+          <motion.div variants={itemVariants} className="footer-col">
             <h4 className="footer-title">Platform</h4>
             <ul className="footer-links">
               <li><Link to="/tools">Browse AI Tools</Link></li>
@@ -38,20 +63,20 @@ const Footer = () => {
               <li><Link to="/blogs">Blog Updates</Link></li>
               <li><Link to="/faq">FAQs</Link></li>
             </ul>
-          </div>
+          </motion.div>
 
-          {/* Col 3: Legal Links */}
-          <div className="footer-col">
+          {/* Col 3: Legal Links with reveal animation */}
+          <motion.div variants={itemVariants} className="footer-col">
             <h4 className="footer-title">Legal</h4>
             <ul className="footer-links">
               <li><Link to="/privacy">Privacy Policy</Link></li>
               <li><Link to="/terms">Terms of Service</Link></li>
               <li><Link to="/refund">Refund Policy</Link></li>
             </ul>
-          </div>
+          </motion.div>
 
-          {/* Col 4: Newsletter */}
-          <div className="footer-col">
+          {/* Col 4: Newsletter with reveal animation */}
+          <motion.div variants={itemVariants} className="footer-col">
             <h4 className="footer-title">Stay Updated</h4>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               Subscribe to get notified about new AI tools and features added weekly.
@@ -77,24 +102,27 @@ const Footer = () => {
                 <Send size={16} />
               </button>
             </form>
-          </div>
+          </motion.div>
         </div>
 
-        <div style={{
-          borderTop: '1px solid var(--border-color)',
-          paddingTop: '1.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '0.85rem',
-          color: 'var(--text-muted)',
-          flexWrap: 'wrap',
-          gap: '1rem'
-        }}>
+        <motion.div 
+          variants={itemVariants}
+          style={{
+            borderTop: '1px solid var(--border-color)',
+            paddingTop: '1.5rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '0.85rem',
+            color: 'var(--text-muted)',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}
+        >
           <span>&copy; {new Date().getFullYear()} Youngo Subscription. All rights reserved.</span>
-          <span>Designed with premium SaaS metrics.</span>
-        </div>
-      </div>
+          <span>Engineered for next-gen AI creators.</span>
+        </motion.div>
+      </motion.div>
     </footer>
   );
 };

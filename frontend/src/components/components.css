@@ -19,15 +19,19 @@
 
 .nav-brand {
   font-family: var(--font-secondary);
-  font-weight: 700;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: 1.55rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-text-reveal {
+  display: inline-flex;
   background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .nav-links {

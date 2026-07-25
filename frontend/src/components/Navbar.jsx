@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Sun, Moon, LogOut, LayoutDashboard, Bell, User, Menu, X, Sparkles } from 'lucide-react';
 import api from '../services/api.js';
@@ -29,7 +30,6 @@ const Navbar = () => {
       fetchNotifications();
       const interval = setInterval(fetchNotifications, 30000); // Check every 30s
 
-      // Listen for custom notification-read events from notification page
       const handleNotificationsRead = () => setUnreadNotifications(0);
       window.addEventListener('notifications-marked-read', handleNotificationsRead);
 
@@ -45,31 +45,97 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const navLinks = [
+    { path: '/', label: 'Home' },
+    { path: '/tools', label: 'AI Tools' },
+    { path: '/pricing', label: 'Pricing' },
+    { path: '/blogs', label: 'Blog' },
+    { path: '/faq', label: 'FAQs' },
+    { path: '/contact', label: 'Contact' },
+  ];
+
+  // Motion variants for brand text reveal
+  const brandLetters = "Youngo".split("");
+
+  const brandContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.06, delayChildren: 0.1 }
+    }
+  };
+
+  const brandLetterVariants = {
+    hidden: { opacity: 0, y: 12, filter: 'blur(4px)' },
+    visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.4, ease: 'easeOut' } }
+  };
+
+  const navItemVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: 0.15 + i * 0.05, duration: 0.4 }
+    })
+  };
+
   return (
-    <nav className="main-navbar">
+    <motion.nav 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="main-navbar"
+    >
+      {/* Brand with typography letter reveal */}
       <Link to="/" className="nav-brand">
-        <Sparkles size={24} style={{ stroke: 'url(#brand-grad)' }} />
-        <span>Youngo</span>
+        <motion.div
+          initial={{ rotate: -15, scale: 0.8, opacity: 0 }}
+          animate={{ rotate: 0, scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          style={{ display: 'inline-flex' }}
+        >
+          <Sparkles size={24} style={{ stroke: 'url(#brand-grad)' }} />
+        </motion.div>
+
+        <motion.div 
+          variants={brandContainerVariants}
+          initial="hidden"
+          animate="visible"
+          className="brand-text-reveal"
+        >
+          {brandLetters.map((char, index) => (
+            <motion.span key={index} variants={brandLetterVariants}>
+              {char}
+            </motion.span>
+          ))}
+        </motion.div>
+
         {/* SVG Gradient definition for brand icon */}
         <svg width="0" height="0">
           <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#4f46e5" />
-            <stop offset="100%" stopColor="#06b6d4" />
+            <stop offset="0%" stopColor="var(--color-primary)" />
+            <stop offset="100%" stopColor="var(--color-accent)" />
           </linearGradient>
         </svg>
       </Link>
 
-      {/* Public links */}
+      {/* Public links with reveal animation */}
       <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
-        <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Home</NavLink>
-        <NavLink to="/tools" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>AI Tools</NavLink>
-        <NavLink to="/pricing" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Pricing</NavLink>
-        <NavLink to="/blogs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Blog</NavLink>
-        <NavLink to="/faq" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>FAQs</NavLink>
-        <NavLink to="/contact" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Contact</NavLink>
+        {navLinks.map((item, i) => (
+          <motion.div custom={i} variants={navItemVariants} initial="hidden" animate="visible" key={item.path}>
+            <NavLink to={item.path} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              {item.label}
+            </NavLink>
+          </motion.div>
+        ))}
       </div>
 
-      <div className="nav-actions">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="nav-actions"
+      >
         <button onClick={toggleTheme} className="theme-toggle" title="Toggle Theme">
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
@@ -118,11 +184,11 @@ const Navbar = () => {
           </>
         )}
 
-        <button className="theme-toggle" style={{ display: 'none' /* Handled by mobile responsive query */ }} onClick={() => setMenuOpen(!menuOpen)}>
+        <button className="theme-toggle" style={{ display: 'none' }} onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-      </div>
-    </nav>
+      </motion.div>
+    </motion.nav>
   );
 };
 
