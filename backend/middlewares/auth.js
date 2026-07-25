@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { asyncHandler } from './error.js';
+import { asyncHandler, ErrorResponse } from './error.js';
 
 // Protect routes
 export const protect = asyncHandler(async (req, res, next) => {
@@ -38,8 +38,10 @@ export const protect = asyncHandler(async (req, res, next) => {
 
     next();
   } catch (error) {
-    res.status(401);
-    throw new Error('Not authorized to access this route');
+    if (!res.statusCode || res.statusCode === 200) {
+      res.status(401);
+    }
+    throw error;
   }
 });
 

@@ -1,47 +1,54 @@
+// Custom Error Response Class
+export class ErrorResponse extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
 // Global Error Handler Middleware
 export const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
-
-  // Log to console for dev
-  console.error(err);
+  let statusCode = err.statusCode || (res.statusCode && res.statusCode !== 200 ? res.statusCode : 500);
+  let message = err.message || 'Server Error';
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
-    const message = `Resource not found`;
-    error = new Error(message);
-    error.statusCode = 404;
+    message = 'Resource not found';
+    statusCode = 404;
   }
 
   // Mongoose duplicate key
   if (err.code === 11000) {
-    const message = `Duplicate field value entered`;
-    error = new Error(message);
-    error.statusCode = 400;
+    message = 'Duplicate field value entered';
+    statusCode = 400;
   }
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map((val) => val.message).join(', ');
-    error = new Error(message);
-    error.statusCode = 400;
+    message = Object.values(err.errors || {}).map((val) => val.message).join(', ');
+    statusCode = 400;
   }
 
   // JWT expired error
   if (err.name === 'TokenExpiredError') {
-    error = new Error('JWT token expired');
-    error.statusCode = 401;
+    message = 'JWT token expired';
+    statusCode = 401;
   }
 
   // JWT signature error
   if (err.name === 'JsonWebTokenError') {
-    error = new Error('Invalid JWT token');
-    error.statusCode = 401;
+    message = 'Invalid JWT token';
+    statusCode = 401;
   }
 
-  res.status(error.statusCode || 500).json({
+  // Only print console stack trace for actual 500 Internal Server Errors
+  if (statusCode === 500) {
+    console.error('[500 Server Error]', err);
+  }
+
+  res.status(statusCode).json({
     success: false,
-    error: error.message || 'Server Error'
+    error: message
   });
 };
 
