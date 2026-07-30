@@ -44,6 +44,8 @@ import UserPurchases from './pages/User/Purchases.jsx';
 
 import './styles/global.css';
 
+import AiAgent3DBackground from './components/AiAgent3DBackground.jsx';
+
 // Protected Route Guard (User access)
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -70,6 +72,7 @@ const App = () => {
   return (
     <AuthProvider>
       <Router>
+        <AiAgent3DBackground />
         <AnnouncementBanner />
         <Routes>
           {/* Public Routes */}
