@@ -2,12 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import './components.css';
 
 /**
- * AiAgent3DBackground: Next-Gen 3D Interactive AI Agent Background Engine
- * Renders a high-performance 3D canvas with:
- * 1. 3D Geometric AI Core (Rotating Dodecahedron & Glowing Energy Rings)
- * 2. Floating 3D AI Tool Nodes (ChatGPT, Midjourney, Claude, Gemini, ElevenLabs)
- * 3. Neural Constellation Stream (Interactive particle mesh reacting to cursor)
- * 4. Ambient Holographic Light Orbs
+ * AiAgent3DBackground: Next-Gen High-Impact 3D AI Agent Background Engine
+ * Renders:
+ * 1. Animated 3D AI Agent Core with Holographic Rotating Polyhedron & Energy Rings
+ * 2. 5 Floating 3D AI Tool Nodes (ChatGPT 4o, Midjourney v6, Claude 3.5, Gemini Pro, ElevenLabs)
+ * 3. Animated Laser Streams & Energy Pulses flowing between AI nodes
+ * 4. High-contrast Constellation Mesh & Mouse Parallax
  */
 const AiAgent3DBackground = () => {
   const canvasRef = useRef(null);
@@ -19,7 +19,6 @@ const AiAgent3DBackground = () => {
     const ctx = canvas.getContext('2d');
     let animationFrameId;
 
-    // Canvas Sizing
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
@@ -30,7 +29,6 @@ const AiAgent3DBackground = () => {
     };
     window.addEventListener('resize', handleResize);
 
-    // Mouse Tracking for Parallax
     const mouse = {
       x: width / 2,
       y: height / 2,
@@ -44,11 +42,9 @@ const AiAgent3DBackground = () => {
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // 3D Geometry Setup (Dodecahedron Vertices for AI Core)
+    // 3D Geometry Setup for Central AI Core Dodecahedron
     const phi = (1 + Math.sqrt(5)) / 2;
     const b = 1 / phi;
-    const c = 2 - phi;
-
     const baseVertices = [
       [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
       [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1],
@@ -57,67 +53,63 @@ const AiAgent3DBackground = () => {
       [-phi, 0, -b], [phi, 0, -b], [-phi, 0, b], [phi, 0, b]
     ];
 
-    // Scale 3D Vertices
-    const coreScale = 130;
+    const coreScale = 160;
     const coreVertices = baseVertices.map(([x, y, z]) => ({
       x: x * coreScale,
       y: y * coreScale,
       z: z * coreScale,
     }));
 
-    // AI Tool Agents Orbit Data
+    // AI Tool Agent Nodes Orbiting Data
     const aiAgents = [
-      { name: 'ChatGPT 4o', color: '#10a37f', radius: 240, speed: 0.008, angle: 0, tilt: 0.4, icon: '🤖' },
-      { name: 'Midjourney v6', color: '#3b82f6', radius: 320, speed: -0.006, angle: 1.2, tilt: -0.3, icon: '🎨' },
-      { name: 'Claude 3.5', color: '#d97706', radius: 400, speed: 0.005, angle: 2.5, tilt: 0.5, icon: '🧠' },
-      { name: 'Gemini Pro', color: '#8b5cf6', radius: 480, speed: -0.007, angle: 3.8, tilt: -0.4, icon: '✨' },
-      { name: 'ElevenLabs', color: '#06b6d4', radius: 360, speed: 0.009, angle: 5.0, tilt: 0.2, icon: '🎙️' },
+      { name: 'ChatGPT 4o', color: '#10a37f', radius: 280, speed: 0.007, angle: 0, tilt: 0.35, icon: '🤖' },
+      { name: 'Midjourney v6', color: '#3b82f6', radius: 360, speed: -0.005, angle: 1.25, tilt: -0.28, icon: '🎨' },
+      { name: 'Claude 3.5', color: '#f59e0b', radius: 440, speed: 0.004, angle: 2.5, tilt: 0.42, icon: '🧠' },
+      { name: 'Gemini Pro', color: '#a855f7', radius: 520, speed: -0.006, angle: 3.75, tilt: -0.35, icon: '✨' },
+      { name: 'ElevenLabs', color: '#06b6d4', radius: 400, speed: 0.008, angle: 5.1, tilt: 0.25, icon: '🎙️' },
     ];
 
-    // Neural Particle Mesh
-    const numParticles = Math.min(Math.floor(width / 22), 65);
+    // Constellation Particles
+    const numParticles = Math.min(Math.floor(width / 18), 75);
     const particles = Array.from({ length: numParticles }, () => ({
-      x: (Math.random() - 0.5) * width * 1.5,
-      y: (Math.random() - 0.5) * height * 1.5,
+      x: (Math.random() - 0.5) * width * 1.6,
+      y: (Math.random() - 0.5) * height * 1.6,
       z: Math.random() * 800 - 400,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      vz: (Math.random() - 0.5) * 0.4,
-      size: Math.random() * 2.5 + 1.2,
-      color: ['#6366f1', '#06b6d4', '#8b5cf6', '#10b981'][Math.floor(Math.random() * 4)],
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      vz: (Math.random() - 0.5) * 0.5,
+      size: Math.random() * 3 + 1.5,
+      color: ['#6366f1', '#06b6d4', '#8b5cf6', '#38bdf8', '#10b981'][Math.floor(Math.random() * 5)],
     }));
 
-    // Rotation Angles
     let rotX = 0;
     let rotY = 0;
     let rotZ = 0;
+    let pulseTime = 0;
 
-    // Render Loop
     const render = () => {
-      // Smooth Mouse Interpolation
       mouse.x += (mouse.targetX - mouse.x) * 0.05;
       mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
-      const parallaxX = (mouse.x - width / 2) * 0.15;
-      const parallaxY = (mouse.y - height / 2) * 0.15;
+      const parallaxX = (mouse.x - width / 2) * 0.18;
+      const parallaxY = (mouse.y - height / 2) * 0.18;
 
       ctx.clearRect(0, 0, width, height);
 
-      // Center Focal Point
       const centerX = width / 2 + parallaxX;
       const centerY = height / 2 + parallaxY;
-      const fov = 600; // 3D Camera Field of View
+      const fov = 650;
 
-      // Increment Core Rotation
-      rotX += 0.005;
-      rotY += 0.007;
-      rotZ += 0.003;
+      rotX += 0.006;
+      rotY += 0.008;
+      rotZ += 0.004;
+      pulseTime += 0.03;
 
       const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
       const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
       const cosZ = Math.cos(rotZ), sinZ = Math.sin(rotZ);
 
-      // 1. Draw Neural Particle Mesh Background
+      // 1. Draw Background Neural Constellation
       particles.forEach((p, idx) => {
         p.x += p.vx;
         p.y += p.vy;
@@ -138,17 +130,18 @@ const AiAgent3DBackground = () => {
           ctx.beginPath();
           ctx.arc(px, py, p.size * scale, 0, Math.PI * 2);
           ctx.fillStyle = p.color;
-          ctx.globalAlpha = Math.min(scale * 0.35, 0.5);
+          ctx.globalAlpha = Math.min(scale * 0.6, 0.75);
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = p.color;
           ctx.fill();
 
-          // Connect nearby particles with glowing laser links
-          for (let j = idx + 1; j < particles.length; j += 4) {
+          for (let j = idx + 1; j < particles.length; j += 3) {
             const p2 = particles[j];
             const dx = p.x - p2.x;
             const dy = p.y - p2.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < 180) {
+            if (dist < 200) {
               const scale2 = fov / (fov + p2.z + 500);
               const p2x = centerX + p2.x * scale2;
               const p2y = centerY + p2.y * scale2;
@@ -157,15 +150,34 @@ const AiAgent3DBackground = () => {
               ctx.moveTo(px, py);
               ctx.lineTo(p2x, p2y);
               ctx.strokeStyle = p.color;
-              ctx.globalAlpha = (1 - dist / 180) * 0.12;
-              ctx.lineWidth = 0.8;
+              ctx.globalAlpha = (1 - dist / 200) * 0.25;
+              ctx.lineWidth = 1;
               ctx.stroke();
             }
           }
         }
       });
+      ctx.shadowBlur = 0;
 
-      // 2. Rotate & Project 3D Core Vertices
+      // 2. Draw Pulsing Holographic Core Rings
+      const ringRadius = 190 + Math.sin(pulseTime) * 12;
+      ctx.beginPath();
+      ctx.ellipse(centerX, centerY, ringRadius, ringRadius * 0.45, rotZ, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.6;
+      ctx.setLineDash([8, 12]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const innerRingRadius = 130 + Math.cos(pulseTime * 1.5) * 8;
+      ctx.beginPath();
+      ctx.ellipse(centerX, centerY, innerRingRadius, innerRingRadius * 0.4, -rotZ * 1.4, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+
+      // 3. Rotate & Project 3D Polyhedron Core Vertices
       const projectedCore = coreVertices.map((v) => {
         let y1 = v.y * cosX - v.z * sinX;
         let z1 = v.y * sinX + v.z * cosX;
@@ -183,16 +195,16 @@ const AiAgent3DBackground = () => {
         };
       });
 
-      // Draw Core Vertex Glowing Nodes & Edges
-      ctx.globalAlpha = 0.75;
+      // Render Core Edges & Glowing Vertices
       for (let i = 0; i < projectedCore.length; i++) {
         const v1 = projectedCore[i];
 
         ctx.beginPath();
-        ctx.arc(v1.x, v1.y, 2.8 * v1.scale, 0, Math.PI * 2);
+        ctx.arc(v1.x, v1.y, 4 * v1.scale, 0, Math.PI * 2);
         ctx.fillStyle = '#6366f1';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 14;
         ctx.shadowColor = '#6366f1';
+        ctx.globalAlpha = 0.9;
         ctx.fill();
 
         for (let j = i + 1; j < projectedCore.length; j++) {
@@ -201,70 +213,98 @@ const AiAgent3DBackground = () => {
           const dy = v1.y - v2.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 110 * v1.scale) {
+          if (dist < 135 * v1.scale) {
             ctx.beginPath();
             ctx.moveTo(v1.x, v1.y);
             ctx.lineTo(v2.x, v2.y);
             const grad = ctx.createLinearGradient(v1.x, v1.y, v2.x, v2.y);
-            grad.addColorStop(0, 'rgba(99, 102, 241, 0.35)');
-            grad.addColorStop(1, 'rgba(6, 182, 212, 0.35)');
+            grad.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
+            grad.addColorStop(1, 'rgba(6, 182, 212, 0.5)');
             ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.1 * v1.scale;
+            ctx.lineWidth = 1.6 * v1.scale;
+            ctx.globalAlpha = 0.55;
             ctx.stroke();
           }
         }
       }
       ctx.shadowBlur = 0;
 
-      // 3. Render Orbiting 3D AI Tool Agent Nodes
+      // 4. Render Orbiting 3D AI Tool Agent Nodes
       aiAgents.forEach((agent) => {
         agent.angle += agent.speed;
 
         const rawX = Math.cos(agent.angle) * agent.radius;
         const rawZ = Math.sin(agent.angle) * agent.radius;
-        const rawY = Math.sin(agent.angle * 2) * 35 + rawZ * agent.tilt;
+        const rawY = Math.sin(agent.angle * 2.2) * 45 + rawZ * agent.tilt;
 
         const scale = fov / (fov + rawZ + 300);
         const agentX = centerX + rawX * scale;
         const agentY = centerY + rawY * scale;
 
+        // Laser Beam from Core to Node
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(agentX, agentY);
         ctx.strokeStyle = agent.color;
-        ctx.globalAlpha = 0.12 * scale;
-        ctx.setLineDash([4, 6]);
-        ctx.lineWidth = 1;
+        ctx.globalAlpha = 0.22 * scale;
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([5, 7]);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        const badgeRadius = 20 * scale;
+        // Animated Traveling Pulse along laser beam
+        const pulseProgress = ((pulseTime * agent.speed * 80) % 1 + 1) % 1;
+        const pulseX = centerX + (agentX - centerX) * pulseProgress;
+        const pulseY = centerY + (agentY - centerY) * pulseProgress;
 
         ctx.beginPath();
-        ctx.arc(agentX, agentY, badgeRadius + 4, 0, Math.PI * 2);
+        ctx.arc(pulseX, pulseY, 3.5 * scale, 0, Math.PI * 2);
         ctx.fillStyle = agent.color;
-        ctx.globalAlpha = 0.2;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = agent.color;
+        ctx.globalAlpha = 0.8;
         ctx.fill();
+        ctx.shadowBlur = 0;
 
+        // Draw 3D Badge Node Container
+        const badgeRadius = 26 * scale;
+
+        // Outer Neon Glow Aura
+        ctx.beginPath();
+        ctx.arc(agentX, agentY, badgeRadius + 6, 0, Math.PI * 2);
+        ctx.fillStyle = agent.color;
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = agent.color;
+        ctx.globalAlpha = 0.35;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Inner Glass Circle
         ctx.beginPath();
         ctx.arc(agentX, agentY, badgeRadius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(14, 22, 40, 0.85)';
+        ctx.fillStyle = 'rgba(14, 22, 40, 0.92)';
         ctx.strokeStyle = agent.color;
-        ctx.lineWidth = 1.8 * scale;
-        ctx.globalAlpha = Math.max(0.35, scale);
+        ctx.lineWidth = 2.2 * scale;
+        ctx.globalAlpha = Math.max(0.7, scale);
         ctx.fill();
         ctx.stroke();
 
-        ctx.font = `${Math.max(10, Math.floor(12 * scale))}px system-ui, sans-serif`;
+        // Agent Icon
+        ctx.font = `${Math.max(12, Math.floor(15 * scale))}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 1;
         ctx.fillText(agent.icon, agentX, agentY);
 
-        if (scale > 0.75) {
-          ctx.font = `600 ${Math.floor(9.5 * scale)}px Inter, sans-serif`;
-          ctx.fillStyle = '#94a3b8';
-          ctx.fillText(agent.name, agentX, agentY + badgeRadius + 11);
+        // Floating Title Pill
+        if (scale > 0.65) {
+          ctx.font = `700 ${Math.floor(11 * scale)}px Inter, sans-serif`;
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+          ctx.fillText(agent.name, agentX, agentY + badgeRadius + 14);
+          ctx.shadowBlur = 0;
         }
       });
 

@@ -18,7 +18,7 @@
 
 .workspace-content {
   padding: 2.5rem;
-  background-color: var(--bg-main);
+  background: transparent;
   overflow-y: auto;
 }
 

@@ -3,7 +3,7 @@
 .landing-wrapper {
   position: relative;
   overflow-x: hidden;
-  background-color: var(--bg-main);
+  background: transparent;
   min-height: 100vh;
 }
 
