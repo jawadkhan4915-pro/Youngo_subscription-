@@ -71,7 +71,7 @@ const AdminRoute = ({ children }) => {
 const App = () => {
   return (
     <AuthProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AiAgent3DBackground />
         <AnnouncementBanner />
         <Routes>
