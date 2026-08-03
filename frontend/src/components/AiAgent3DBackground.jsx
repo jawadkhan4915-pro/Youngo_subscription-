@@ -1,18 +1,21 @@
 import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import './components.css';
 
 /**
  * AiAgent3DBackground: Next-Gen High-Impact 3D AI Agent Background Engine
- * Renders:
- * 1. Animated 3D AI Agent Core with Holographic Rotating Polyhedron & Energy Rings
- * 2. 5 Floating 3D AI Tool Nodes (ChatGPT 4o, Midjourney v6, Claude 3.5, Gemini Pro, ElevenLabs)
- * 3. Animated Laser Streams & Energy Pulses flowing between AI nodes
- * 4. High-contrast Constellation Mesh & Mouse Parallax
+ * Renders on public landing pages (Home, Pricing, Tools, Login, etc.)
+ * Excludes Admin & User Dashboard routes to prevent floating AI nodes from obscuring stats/charts.
  */
 const AiAgent3DBackground = () => {
+  const location = useLocation();
   const canvasRef = useRef(null);
 
+  const isDashboardOrAdmin = location.pathname.startsWith('/admin') || location.pathname.startsWith('/dashboard');
+
   useEffect(() => {
+    if (isDashboardOrAdmin) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -318,7 +321,11 @@ const AiAgent3DBackground = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isDashboardOrAdmin]);
+
+  if (isDashboardOrAdmin) {
+    return null;
+  }
 
   return (
     <div className="ai-agent-3d-bg-container">

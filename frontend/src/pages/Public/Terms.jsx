@@ -1,42 +1,120 @@
 import React from 'react';
 import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
+import { ShieldAlert, Cookie, Database, Cpu, AlertTriangle, FileText, CheckCircle2 } from 'lucide-react';
 import './public.css';
 
 const Terms = () => {
   return (
     <>
       <Navbar />
-      <div className="container" style={{ padding: '4rem 1.5rem', minHeight: '80vh', maxWidth: '800px' }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '1.5rem' }}>Terms of Service</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>Last updated: July 9, 2026</p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', lineHeight: '1.7', color: 'var(--text-muted)' }}>
-          <p>
-            By accessing this website, we assume you accept these terms and conditions. Do not continue to use Youngo Subscription if you do not agree to take all of the terms and conditions stated on this page.
+      <div className="container" style={{ padding: '4rem 1.5rem', minHeight: '85vh', maxWidth: '900px' }}>
+        
+        {/* Page Header */}
+        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.4rem 1rem',
+            borderRadius: 'var(--radius-full)',
+            background: 'rgba(99, 102, 241, 0.1)',
+            border: '1px solid rgba(99, 102, 241, 0.2)',
+            color: 'var(--color-primary)',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            marginBottom: '1rem'
+          }}>
+            <FileText size={16} /> Official Terms of Service & Disclaimer
+          </div>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>Terms of Service</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+            Effective Date: August 3, 2026 &bull; Please read these terms carefully before using Youngo Subscription.
           </p>
+        </div>
 
-          <h3 style={{ color: 'var(--text-main)' }}>1. Allocation of Credits</h3>
-          <p>
-            Credits purchased on the platform are designated solely for use in the Youngo AI Playground. Credits are non-transferable, cannot be redeemed for legal currency, and expire 30 days after the date the manual payment is approved.
-          </p>
+        {/* Highlighted Warning Box */}
+        <div className="glass-card" style={{
+          padding: '1.75rem',
+          marginBottom: '2.5rem',
+          borderLeft: '4px solid var(--color-warning)',
+          background: 'rgba(245, 158, 11, 0.05)'
+        }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <AlertTriangle size={24} style={{ color: 'var(--color-warning)', flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+                Important API & Service Provider Disclaimer
+              </h3>
+              <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                Youngo Subscription operates strictly as a third-party API connectivity and credit allocation provider. We are <strong>NOT the owner, developer, or primary operator</strong> of any third-party AI models, chat bots, or APIs (such as ChatGPT, Midjourney, Claude, Gemini, ElevenLabs, etc.).
+              </p>
+            </div>
+          </div>
+        </div>
 
-          <h3 style={{ color: 'var(--text-main)' }}>2. Permissible Use & Prohibitions</h3>
-          <p>
-            Users are strictly prohibited from:
-            <ul>
-              <li>Using automated scripts to scrape outputs from the playground</li>
-              <li>Submitting prompts containing illegal, violent, or hate-speech directives</li>
-              <li>Sharing their dashboard credential details with other users</li>
-              <li>Falsifying mobile bank transfer receipts or screenshot uploads</li>
+        {/* Detailed Sections */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', lineHeight: '1.75', color: 'var(--text-muted)' }}>
+          
+          {/* Section 1 */}
+          <div className="glass-card" style={{ padding: '2rem' }}>
+            <h3 style={{ color: 'var(--text-main)', fontSize: '1.3rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Cpu size={20} style={{ color: 'var(--color-primary)' }} /> 1. API Provider & Ownership Status
+            </h3>
+            <p style={{ marginBottom: '1rem' }}>
+              Youngo Subscription provides access to AI tools solely via official API integrations and shared quota channels. 
+            </p>
+            <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <li><strong>No Ownership:</strong> We do not own, create, or claim trademark/intellectual rights over third-party AI models or brand names. All trademarks belong to their respective owners (OpenAI, Anthropic, Google, Midjourney, etc.).</li>
+              <li><strong>Third-Party Dependency:</strong> Service availability, model speed, parameters, and features depend directly on third-party upstream providers.</li>
             </ul>
-            Violation of these terms will lead to immediate account suspension or permanent banning.
-          </p>
+          </div>
 
-          <h3 style={{ color: 'var(--text-main)' }}>3. Limitation of Liability</h3>
-          <p>
-            We provide AI access proxies on an "as-is" basis. Since external AI providers (OpenAI, Anthropic, Google) control raw model uptime and capabilities, Youngo is not liable for temporary service interruptions or changes in API models.
-          </p>
+          {/* Section 2 */}
+          <div className="glass-card" style={{ padding: '2rem' }}>
+            <h3 style={{ color: 'var(--text-main)', fontSize: '1.3rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <ShieldAlert size={20} style={{ color: 'var(--color-danger)' }} /> 2. Disclaimer of Responsibility for Data Loss & Downtime
+            </h3>
+            <p style={{ marginBottom: '1rem' }}>
+              We strive for maximum platform uptime, but Youngo Subscription is <strong>NOT responsible or liable</strong> for:
+            </p>
+            <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <li>Any form of <strong>data loss</strong>, chat output deletion, prompt history resets, or lost project data.</li>
+              <li>Service downtime or rate limiting caused by upstream API providers or server maintenance.</li>
+              <li>Inaccuracies, errors, or undesirable content generated by third-party AI algorithms.</li>
+            </ul>
+            <p style={{ marginTop: '1rem', fontStyle: 'italic', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+              Users are strongly advised to keep independent local copies/backups of all important prompts and generated results.
+            </p>
+          </div>
+
+          {/* Section 3 */}
+          <div className="glass-card" style={{ padding: '2rem' }}>
+            <h3 style={{ color: 'var(--text-main)', fontSize: '1.3rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Cookie size={20} style={{ color: 'var(--color-accent)' }} /> 3. Use of Cookies & Storage Technologies
+            </h3>
+            <p style={{ marginBottom: '1rem' }}>
+              To ensure a secure and smooth user experience, Youngo Subscription utilizes cookies, local storage, and session storage:
+            </p>
+            <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <li><strong>Authentication & Security:</strong> Essential session cookies to keep you safely logged into your user dashboard.</li>
+              <li><strong>User Preferences:</strong> Storing dark/light theme options, language settings, and interface state.</li>
+              <li><strong>Platform Functionality:</strong> Monitoring credit usage and API session tokens.</li>
+            </ul>
+          </div>
+
+          {/* Section 4 */}
+          <div className="glass-card" style={{ padding: '2rem' }}>
+            <h3 style={{ color: 'var(--text-main)', fontSize: '1.3rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Database size={20} style={{ color: 'var(--color-secondary)' }} /> 4. Credits, Topups & Acceptable Use
+            </h3>
+            <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <li>Credits allocated upon plan purchase are valid strictly within the Youngo AI Playground and expire 30 days after activation.</li>
+              <li>Submitting illegal, abusive, or automated scraping requests will result in immediate credit forfeiture and account suspension.</li>
+              <li>Manual bank receipts uploaded for wallet topups are verified by administrators prior to credit approval.</li>
+            </ul>
+          </div>
+
         </div>
       </div>
       <Footer />

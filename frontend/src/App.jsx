@@ -45,6 +45,7 @@ import UserPurchases from './pages/User/Purchases.jsx';
 import './styles/global.css';
 
 import AiAgent3DBackground from './components/AiAgent3DBackground.jsx';
+import CookieBanner from './components/CookieBanner.jsx';
 
 // Protected Route Guard (User access)
 const ProtectedRoute = ({ children }) => {
@@ -74,6 +75,7 @@ const App = () => {
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AiAgent3DBackground />
         <AnnouncementBanner />
+        <CookieBanner />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
