@@ -70,7 +70,7 @@ function renderMarkdown(text) {
 }
 
 const Playground = () => {
-  const { fetchMe } = useAuth();
+  const { wallet, fetchMe } = useAuth();
 
   const [activeSubs, setActiveSubs] = useState([]);
   const [selectedSub, setSelectedSub] = useState(null);
@@ -86,30 +86,60 @@ const Playground = () => {
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load active subscriptions
-  const fetchActiveSubs = useCallback(async () => {
+  const availableWalletCredits = wallet ? Math.max(0, (wallet.totalCredits || 0) - (wallet.spentCredits || 0)) : 100;
+
+  // Load active subscriptions & full tools catalog for 100 free credits trial
+  const fetchActiveSubsAndTools = useCallback(async () => {
     try {
       setLoadingSubs(true);
       setLoadError('');
-      const res = await api.get('/settings/user/stats');
-      if (res.data?.success) {
-        const subs = res.data.data.activeSubscriptions || [];
-        setActiveSubs(subs);
-        if (subs.length > 0 && !selectedSub) {
-          setSelectedSub(subs[0]);
-        }
+
+      const [statsRes, toolsRes] = await Promise.all([
+        api.get('/settings/user/stats'),
+        api.get('/tools')
+      ]);
+
+      let subs = [];
+      if (statsRes.data?.success) {
+        subs = (statsRes.data.data.activeSubscriptions || []).map(s => ({
+          ...s,
+          isFreeTrial: false
+        }));
+      }
+
+      let catalogTools = [];
+      if (toolsRes.data?.success) {
+        catalogTools = toolsRes.data.data || [];
+      }
+
+      // Create trial node items for tools without an active subscription
+      const subscribedToolIds = new Set(subs.map(s => s.tool?._id));
+      const trialNodes = catalogTools
+        .filter(t => !subscribedToolIds.has(t._id))
+        .map(t => ({
+          _id: `trial_${t._id}`,
+          tool: t,
+          creditsRemaining: availableWalletCredits,
+          isFreeTrial: true
+        }));
+
+      const combinedNodes = [...subs, ...trialNodes];
+      setActiveSubs(combinedNodes);
+
+      if (combinedNodes.length > 0 && !selectedSub) {
+        setSelectedSub(combinedNodes[0]);
       }
     } catch (err) {
       console.error('Failed to load subscriptions:', err);
-      setLoadError('Could not load your subscriptions. Please check your connection and refresh.');
+      setLoadError('Could not load your AI agents. Please check your connection and refresh.');
     } finally {
       setLoadingSubs(false);
     }
-  }, []);
+  }, [availableWalletCredits]);
 
   useEffect(() => {
-    fetchActiveSubs();
-  }, [fetchActiveSubs]);
+    fetchActiveSubsAndTools();
+  }, [fetchActiveSubsAndTools]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -241,23 +271,40 @@ const Playground = () => {
                 AI Playground
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                Chat with premium AI agents using your active subscriptions.
+                Test & prompt premium AI agents using your active subscriptions or 100 Free Credits trial.
               </p>
             </div>
+            
+            {availableWalletCredits > 0 && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(99, 102, 241, 0.15))',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                padding: '0.45rem 1rem',
+                borderRadius: 'var(--radius-full)',
+                color: 'var(--color-warning)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                🎁 Free Trial Wallet: <strong>{availableWalletCredits} cr</strong>
+              </div>
+            )}
           </div>
 
           {/* Loading state */}
           {loadingSubs ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5rem', color: 'var(--text-muted)', gap: '0.75rem' }}>
               <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
-              Syncing active subscriptions...
+              Syncing AI agents...
             </div>
           ) : loadError ? (
             <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', maxWidth: '540px', margin: '2rem auto' }}>
               <AlertTriangle size={40} style={{ color: 'var(--color-warning)', marginBottom: '1rem' }} />
               <h3 style={{ marginBottom: '0.5rem' }}>Connection Error</h3>
               <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{loadError}</p>
-              <button onClick={fetchActiveSubs} className="gradient-btn">
+              <button onClick={fetchActiveSubsAndTools} className="gradient-btn">
                 <RefreshCw size={16} /> Retry
               </button>
             </div>
@@ -272,8 +319,7 @@ const Playground = () => {
               <Sparkles size={56} style={{ color: 'var(--color-primary)', opacity: 0.4, marginBottom: '1.5rem' }} />
               <h3 style={{ marginBottom: '0.75rem' }}>Playground Offline</h3>
               <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: 1.6 }}>
-                You don't have any active AI tool subscriptions. Browse our catalog and purchase a plan to unlock
-                the AI Playground with full chat capabilities.
+                Browse our catalog and purchase a plan or use your 100 free credits to test the AI agents.
               </p>
               <Link to="/tools" className="gradient-btn" style={{ display: 'inline-flex' }}>
                 <Zap size={16} /> Browse AI Tools
@@ -292,7 +338,7 @@ const Playground = () => {
                   paddingLeft: '0.25rem',
                   letterSpacing: '0.08em'
                 }}>
-                  My AI Agents ({activeSubs.length})
+                  Select AI Agent ({activeSubs.length})
                 </span>
 
                 {activeSubs.map((sub) => {
@@ -334,16 +380,29 @@ const Playground = () => {
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          color: isActive ? 'var(--color-primary)' : 'var(--text-main)'
+                          color: isActive ? 'var(--color-primary)' : 'var(--text-main)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem'
                         }}>
-                          {sub.tool?.name}
+                          <span>{sub.tool?.name}</span>
+                          {sub.isFreeTrial && (
+                            <span style={{
+                              fontSize: '0.65rem',
+                              padding: '0.1rem 0.35rem',
+                              borderRadius: '4px',
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              color: 'var(--color-warning)',
+                              fontWeight: 700
+                            }}>Trial</span>
+                          )}
                         </div>
                         <div style={{
                           fontSize: '0.72rem',
                           color: lowCredits ? 'var(--color-warning)' : 'var(--text-muted)',
                           marginTop: '0.1rem'
                         }}>
-                          {sub.creditsRemaining} credits {lowCredits ? '⚠️' : ''}
+                          {sub.isFreeTrial ? `${availableWalletCredits} Free Credits` : `${sub.creditsRemaining} credits`} {lowCredits ? '⚠️' : ''}
                         </div>
                       </div>
 

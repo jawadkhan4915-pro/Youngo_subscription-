@@ -2,6 +2,7 @@ import Subscription from '../models/Subscription.js';
 import AITool from '../models/AITool.js';
 import UsageLog from '../models/UsageLog.js';
 import Transaction from '../models/Transaction.js';
+import Wallet from '../models/Wallet.js';
 import { asyncHandler } from '../middlewares/error.js';
 import axios from 'axios';
 
@@ -120,24 +121,7 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
     throw new Error('This AI tool is currently offline. Please contact support.');
   }
 
-  // 2. Verify Active Subscription
-  const sub = await Subscription.findOne({
-    user: req.user.id,
-    tool: toolId,
-    status: 'Active'
-  });
-
-  if (!sub) {
-    res.status(403);
-    throw new Error('No active subscription found for this tool. Please purchase a plan from the Tools catalog.');
-  }
-
-  if (sub.expiresAt < Date.now()) {
-    res.status(403);
-    throw new Error('Your subscription for this tool has expired. Please renew your plan.');
-  }
-
-  // 3. Determine Credit Cost
+  // 2. Determine Credit Cost
   const toolNameLower = tool.name.toLowerCase();
   let creditCost = 1;
   const heavyToolKeywords = [
@@ -148,12 +132,30 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
     creditCost = 5;
   }
 
-  if (sub.creditsRemaining < creditCost) {
+  // 3. Check for Active Subscription OR Free Trial Wallet Credits
+  const sub = await Subscription.findOne({
+    user: req.user.id,
+    tool: toolId,
+    status: 'Active'
+  });
+
+  const wallet = await Wallet.findOne({ user: req.user.id });
+  const availableWalletCredits = wallet ? Math.max(0, (wallet.totalCredits || 0) - (wallet.spentCredits || 0)) : 0;
+
+  let isPaidSubscription = false;
+  let isFreeTrial = false;
+
+  if (sub && sub.expiresAt >= Date.now() && sub.creditsRemaining >= creditCost) {
+    isPaidSubscription = true;
+  } else if (availableWalletCredits >= creditCost) {
+    isFreeTrial = true;
+  } else {
     res.status(403);
-    throw new Error(
-      `Insufficient credits! This action costs ${creditCost} credit${creditCost > 1 ? 's' : ''}, ` +
-      `but you only have ${sub.creditsRemaining} remaining. Please top up your wallet.`
-    );
+    if (sub && sub.creditsRemaining < creditCost) {
+      throw new Error(`Insufficient subscription credits! You have ${sub.creditsRemaining} credits remaining on this plan, and your 100 free trial credits are exhausted. Please top up your wallet.`);
+    } else {
+      throw new Error(`You have used all your 100 free trial credits! Please purchase a subscription for ${tool.name} from the catalog to continue using this AI agent.`);
+    }
   }
 
   // 4. Check Daily Usage Limits
@@ -169,8 +171,7 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
   if (dailyLogsCount >= tool.maxDailyLimit) {
     res.status(429);
     throw new Error(
-      `Daily limit reached! You've used all ${tool.maxDailyLimit} daily requests for this tool. ` +
-      `Resets at midnight.`
+      `Daily limit reached! You've used all ${tool.maxDailyLimit} daily requests for this tool. Resets at midnight.`
     );
   }
 
@@ -188,11 +189,19 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
     aiEngine = 'simulation';
   }
 
-  // 6. Deduct Credits & Save Subscription
-  sub.creditsRemaining -= creditCost;
-  sub.dailyUsed = (sub.dailyUsed || 0) + creditCost;
-  sub.monthlyUsed = (sub.monthlyUsed || 0) + creditCost;
-  await sub.save();
+  // 6. Deduct Credits
+  let remainingBalance = 0;
+  if (isPaidSubscription) {
+    sub.creditsRemaining -= creditCost;
+    sub.dailyUsed = (sub.dailyUsed || 0) + creditCost;
+    sub.monthlyUsed = (sub.monthlyUsed || 0) + creditCost;
+    await sub.save();
+    remainingBalance = sub.creditsRemaining;
+  } else if (isFreeTrial && wallet) {
+    wallet.spentCredits = (wallet.spentCredits || 0) + creditCost;
+    await wallet.save();
+    remainingBalance = Math.max(0, wallet.totalCredits - wallet.spentCredits);
+  }
 
   // 7. Log Usage & Transaction
   await UsageLog.create({
@@ -208,7 +217,7 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
     user: req.user.id,
     type: 'Credit_Deduction',
     amount: creditCost,
-    description: `Used ${creditCost} credit${creditCost > 1 ? 's' : ''} on ${tool.name} Playground`,
+    description: `Used ${creditCost} credit${creditCost > 1 ? 's' : ''} on ${tool.name} Playground (${isFreeTrial ? '100 Free Credits Trial' : 'Paid Plan'})`,
     referenceId: toolId.toString()
   });
 
@@ -217,7 +226,8 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
     tool: tool.name,
     engine: aiEngine,
     creditsSpent: creditCost,
-    creditsRemaining: sub.creditsRemaining,
+    creditsRemaining: remainingBalance,
+    isFreeTrial,
     result: responseData
   });
 });

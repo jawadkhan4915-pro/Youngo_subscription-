@@ -79,7 +79,7 @@ const Home = () => {
               className="hero-badge"
             >
               <Sparkles size={15} className="hero-badge-sparkle" />
-              <span>Next-Gen MERN AI Subscription Engine</span>
+              <span>🎁 Get 100 Free Credits to Test AI Agents on Signup!</span>
             </motion.div>
 
             <motion.h1 
@@ -98,7 +98,7 @@ const Home = () => {
               transition={{ duration: 0.7, delay: 0.2 }}
               className="hero-desc"
             >
-              Streamline your workflow with instant access to <strong>ChatGPT Plus, Gemini Advanced, Claude 3.5, Midjourney v6, and ElevenLabs</strong>. Pay only for the credits you use with direct receipt verification and zero monthly markup.
+              Streamline your workflow with instant access to <strong>ChatGPT Plus, Gemini Advanced, Claude 3.5, Midjourney v6, and ElevenLabs</strong>. Sign up today to receive <strong>100 Free Credits</strong> to test all AI agents before buying a plan!
             </motion.p>
 
             <motion.div 
@@ -107,8 +107,8 @@ const Home = () => {
               transition={{ duration: 0.7, delay: 0.3 }}
               className="hero-actions"
             >
-              <Link to="/tools" className="gradient-btn hero-cta-primary">
-                <span>Explore AI Playground</span>
+              <Link to="/register" className="gradient-btn hero-cta-primary">
+                <span>Claim 100 Free Credits</span>
                 <ArrowRight size={18} />
               </Link>
               <Link to="/pricing" className="glass-btn hero-cta-secondary">

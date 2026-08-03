@@ -79,12 +79,12 @@ const Register = () => {
               Join <span className="highlight-gradient">Youngo Subscription</span>
             </h2>
             <p className="auth-stage-sub">
-              Create an account to claim 20 free starting credits and explore ChatGPT Plus, Midjourney, Claude, and more.
+              Create an account to claim 100 free starting credits and explore ChatGPT Plus, Midjourney, Claude, and more.
             </p>
             <div className="auth-feature-pills">
-              <span className="auth-pill"><Gift size={12} style={{ display: 'inline', marginRight: 4 }} /> 20 Bonus Credits</span>
+              <span className="auth-pill"><Gift size={12} style={{ display: 'inline', marginRight: 4 }} /> 100 Free Credits</span>
               <span className="auth-pill"><ShieldCheck size={12} style={{ display: 'inline', marginRight: 4 }} /> Instant OTP Signup</span>
-              <span className="auth-pill"><Zap size={12} style={{ display: 'inline', marginRight: 4 }} /> No Subscription Lock</span>
+              <span className="auth-pill"><Zap size={12} style={{ display: 'inline', marginRight: 4 }} /> Test Before Buying</span>
             </div>
           </motion.div>
 

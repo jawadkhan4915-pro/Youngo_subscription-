@@ -83,10 +83,10 @@ export const register = asyncHandler(async (req, res, next) => {
     verificationOTPExpires: otpExpires
   });
 
-  // Create wallet for user
+  // Create wallet for user with 100 Free Trial Credits
   const wallet = await Wallet.create({
     user: user._id,
-    totalCredits: 20 // Default 20 free credits upon signup
+    totalCredits: 100 // 100 Free Credits on registration to test AI agents before subscribing
   });
 
   // If referred, log the referral history link
@@ -94,10 +94,10 @@ export const register = asyncHandler(async (req, res, next) => {
     await ReferralHistory.create({
       referrer: referrerUser._id,
       referee: user._id,
-      rewardCredits: 20 // Reward both or just referrer, here reward is 20 credits
+      rewardCredits: 20
     });
 
-    // Credit referrer wallet immediately or upon verification? Let's credit referrer immediately with 20 credits
+    // Credit referrer wallet immediately
     const referrerWallet = await Wallet.findOne({ user: referrerUser._id });
     if (referrerWallet) {
       referrerWallet.totalCredits += 20;
@@ -106,7 +106,7 @@ export const register = asyncHandler(async (req, res, next) => {
   }
 
   // Send verification email
-  const message = `Welcome to Youngo Subscription Sharing Platform! Use this OTP to verify your email address:\n\n${otp}\n\nThis OTP is valid for 10 minutes.`;
+  const message = `Welcome to Youngo Subscription Sharing Platform! You have received 100 Free Credits to test all AI Agents in our playground before subscribing to any plan.\n\nUse this OTP to verify your email address:\n\n${otp}\n\nThis OTP is valid for 10 minutes.`;
   await sendEmail({
     email: user.email,
     subject: 'Youngo Subscription - Email Verification OTP',
