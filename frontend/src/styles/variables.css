@@ -1,8 +1,9 @@
 /* CSS Variables - Design Tokens */
 :root {
-  /* Fonts */
-  --font-primary: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-secondary: 'Poppins', system-ui, sans-serif;
+  /* Typography Tokens - Bespoke Modern Tech System */
+  --font-primary: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-secondary: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Colors (Electric Sapphire & Deep Cobalt Theme) */
   --color-primary: #6366f1;

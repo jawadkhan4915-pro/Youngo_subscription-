@@ -23,72 +23,94 @@ export const getAdminDashboardStats = asyncHandler(async (req, res, next) => {
 
   const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-  // Generate 7-day date ranges for parallel queries
-  const dayRanges = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    d.setHours(0,0,0,0);
-    const nextD = new Date(d);
-    nextD.setDate(nextD.getDate() + 1);
-    dayRanges.push({ d, nextD });
-  }
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  // Query counts, stats, recent data, and daily charts in parallel
+  // Execute all aggregated DB operations in parallel
   const [
     totalUsers,
     activeUsers,
     totalTools,
-    completedOrders,
     totalOrders,
     pendingPayments,
     activeSubs,
-    todayLogs,
-    currentMonthOrders,
+    totalRevenueAgg,
+    monthlyRevenueAgg,
+    creditsUsedTodayAgg,
     recentOrders,
     recentActivities,
-    tools,
-    ...dayOrdersResults
+    totalRevenueChartAgg,
+    toolUsageAgg
   ] = await Promise.all([
     User.countDocuments({ role: 'User' }),
     User.countDocuments({ role: 'User', status: 'Active' }),
     AITool.countDocuments(),
-    Order.find({ paymentStatus: 'Completed' }),
     Order.countDocuments(),
     Payment.countDocuments({ status: 'Pending' }),
     Subscription.countDocuments({ status: 'Active', expiresAt: { $gt: new Date() } }),
-    UsageLog.find({ createdAt: { $gte: startOfDay } }),
-    Order.find({ paymentStatus: 'Completed', createdAt: { $gte: startOfMonth } }),
-    Order.find().populate('user', 'name email').sort('-createdAt').limit(5),
-    UsageLog.find().populate('user', 'name').populate('tool', 'name').sort('-createdAt').limit(5),
-    AITool.find().limit(5),
-    // Spread 7-day order queries
-    ...dayRanges.map(range => Order.find({
-      paymentStatus: 'Completed',
-      createdAt: { $gte: range.d, $lt: range.nextD }
-    }))
+    Order.aggregate([
+      { $match: { paymentStatus: 'Completed' } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    ]),
+    Order.aggregate([
+      { $match: { paymentStatus: 'Completed', createdAt: { $gte: startOfMonth } } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    ]),
+    UsageLog.aggregate([
+      { $match: { createdAt: { $gte: startOfDay } } },
+      { $group: { _id: null, total: { $sum: '$creditsDeducted' } } }
+    ]),
+    Order.find().populate('user', 'name email').sort('-createdAt').limit(5).lean(),
+    UsageLog.find().populate('user', 'name').populate('tool', 'name').sort('-createdAt').limit(5).lean(),
+    Order.aggregate([
+      {
+        $match: {
+          paymentStatus: 'Completed',
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          revenue: { $sum: "$totalAmount" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]),
+    UsageLog.aggregate([
+      { $group: { _id: "$tool", value: { $sum: 1 } } },
+      { $sort: { value: -1 } },
+      { $limit: 5 }
+    ])
   ]);
 
-  const totalRevenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
-  const creditsUsedToday = todayLogs.reduce((sum, log) => sum + log.creditsDeducted, 0);
-  const monthlyRevenue = currentMonthOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalRevenue = totalRevenueAgg[0]?.total || 0;
+  const monthlyRevenue = monthlyRevenueAgg[0]?.total || 0;
+  const creditsUsedToday = creditsUsedTodayAgg[0]?.total || 0;
 
-  // Map 7-day revenue chart data
-  const revenueChartData = dayOrdersResults.map((dayOrders, index) => {
-    const { d } = dayRanges[index];
-    const dayRev = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-    return {
-      date: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-      revenue: dayRev
-    };
-  });
+  // Build 7-day revenue map for missing dates
+  const revenueMap = new Map(totalRevenueChartAgg.map(item => [item._id, item.revenue]));
+  const revenueChartData = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const formattedLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    revenueChartData.push({
+      date: formattedLabel,
+      revenue: revenueMap.get(dateStr) || 0
+    });
+  }
 
-  // Query tool usage counts in parallel
-  const toolPromises = tools.map(tool => UsageLog.countDocuments({ tool: tool._id }));
-  const toolCounts = await Promise.all(toolPromises);
-  const toolUsageData = tools.map((tool, index) => ({
-    name: tool.name,
-    value: toolCounts[index]
+  // Populate tool popularity chart
+  const toolIds = toolUsageAgg.map(t => t._id).filter(Boolean);
+  const toolDocs = await AITool.find({ _id: { $in: toolIds } }).select('name').lean();
+  const toolMap = new Map(toolDocs.map(t => [t._id.toString(), t.name]));
+
+  const toolUsageData = toolUsageAgg.map(item => ({
+    name: item._id ? (toolMap.get(item._id.toString()) || 'Unknown Tool') : 'Unknown Tool',
+    value: item.value
   }));
 
   res.status(200).json({
@@ -121,77 +143,76 @@ export const getAdminDashboardStats = asyncHandler(async (req, res, next) => {
 
 export const getUserDashboardStats = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
+  const userObjectId = new mongoose.Types.ObjectId(userId);
 
-  // Wallet credits & loyalty points
-  const wallet = await Wallet.findOne({ user: userId });
-
-  // Subscriptions Count & Details
-  const activeSubscriptions = await Subscription.find({
-    user: userId,
-    status: 'Active',
-    expiresAt: { $gt: new Date() }
-  }).populate('tool', 'name logo status');
-
-  // Total Orders count
-  const ordersCount = await Order.countDocuments({ user: userId });
-
-  // Usage Logs counts
-  const totalRequests = await UsageLog.countDocuments({ user: userId });
-
-  // Recent usage
-  const recentLogs = await UsageLog.find({ user: userId })
-    .populate('tool', 'name logo')
-    .sort('-createdAt')
-    .limit(5);
-
-  // 7-day daily usage aggregation
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  const dailyUsage = await UsageLog.aggregate([
-    {
-      $match: {
-        user: new mongoose.Types.ObjectId(userId),
-        createdAt: { $gte: sevenDaysAgo }
+  const [
+    wallet,
+    activeSubscriptions,
+    ordersCount,
+    totalRequests,
+    recentLogs,
+    dailyUsage,
+    toolUsage
+  ] = await Promise.all([
+    Wallet.findOne({ user: userId }).lean(),
+    Subscription.find({
+      user: userId,
+      status: 'Active',
+      expiresAt: { $gt: new Date() }
+    }).populate('tool', 'name logo status').lean(),
+    Order.countDocuments({ user: userId }),
+    UsageLog.countDocuments({ user: userId }),
+    UsageLog.find({ user: userId })
+      .populate('tool', 'name logo')
+      .sort('-createdAt')
+      .limit(5)
+      .lean(),
+    UsageLog.aggregate([
+      {
+        $match: {
+          user: userObjectId,
+          createdAt: { $gte: sevenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          creditsSpent: { $sum: "$creditsDeducted" },
+          requestsCount: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]),
+    UsageLog.aggregate([
+      {
+        $match: {
+          user: userObjectId
+        }
+      },
+      {
+        $group: {
+          _id: "$tool",
+          creditsSpent: { $sum: "$creditsDeducted" },
+          requestsCount: { $sum: 1 }
+        }
       }
-    },
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-        creditsSpent: { $sum: "$creditsDeducted" },
-        requestsCount: { $sum: 1 }
-      }
-    },
-    { $sort: { _id: 1 } }
+    ])
   ]);
 
-  // Tool usage distribution aggregation
-  const toolUsage = await UsageLog.aggregate([
-    {
-      $match: {
-        user: new mongoose.Types.ObjectId(userId)
-      }
-    },
-    {
-      $group: {
-        _id: "$tool",
-        creditsSpent: { $sum: "$creditsDeducted" },
-        requestsCount: { $sum: 1 }
-      }
-    }
-  ]);
+  // Batch populate tool details in 1 single query (eliminates N+1 loop)
+  const toolIds = toolUsage.map(item => item._id).filter(Boolean);
+  const toolsInfo = await AITool.find({ _id: { $in: toolIds } }).select('name logo').lean();
+  const toolMap = new Map(toolsInfo.map(t => [t._id.toString(), t.name]));
 
-  const populatedToolUsage = await Promise.all(
-    toolUsage.map(async (item) => {
-      const toolInfo = await AITool.findById(item._id).select('name logo');
-      return {
-        toolName: toolInfo ? toolInfo.name : 'Unknown',
-        creditsSpent: item.creditsSpent,
-        requestsCount: item.requestsCount
-      };
-    })
-  );
+  const populatedToolUsage = toolUsage.map((item) => ({
+    toolName: item._id ? (toolMap.get(item._id.toString()) || 'Unknown') : 'Unknown',
+    creditsSpent: item.creditsSpent,
+    requestsCount: item.requestsCount
+  }));
 
   res.status(200).json({
     success: true,
@@ -219,7 +240,7 @@ export const getNotifications = asyncHandler(async (req, res, next) => {
   // Return user's notifications and general system announcements
   const notifications = await Notification.find({
     $or: [{ user: req.user.id }, { user: null }]
-  }).sort('-createdAt').limit(20);
+  }).sort('-createdAt').limit(20).lean();
 
   res.status(200).json({ success: true, data: notifications });
 });
@@ -242,7 +263,7 @@ export const getActiveAnnouncements = asyncHandler(async (req, res, next) => {
     isActive: true,
     startDate: { $lte: currentDate },
     endDate: { $gte: currentDate }
-  }).sort('-createdAt');
+  }).sort('-createdAt').lean();
 
   res.status(200).json({ success: true, data: announcements });
 });
@@ -275,7 +296,8 @@ export const getAuditLogs = asyncHandler(async (req, res, next) => {
   const logs = await AuditLog.find()
     .populate('admin', 'name email')
     .sort('-createdAt')
-    .limit(100);
+    .limit(100)
+    .lean();
 
   res.status(200).json({ success: true, data: logs });
 });
@@ -304,7 +326,7 @@ export const updateSettings = asyncHandler(async (req, res, next) => {
 // @access  Public
 export const getPublicSettings = asyncHandler(async (req, res, next) => {
   const keys = ['bank_account', 'easypaisa_number', 'jazzcash_number', 'maintenance_mode'];
-  const settings = await Settings.find({ key: { $in: keys } });
+  const settings = await Settings.find({ key: { $in: keys } }).lean();
   
   const settingsMap = {};
   // Set default fallbacks matching standard developer config

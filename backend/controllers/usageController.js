@@ -366,7 +366,8 @@ export const getMyLogs = asyncHandler(async (req, res, next) => {
   const logs = await UsageLog.find({ user: req.user.id })
     .populate('tool', 'name logo')
     .sort('-createdAt')
-    .limit(100);
+    .limit(100)
+    .lean();
 
   res.status(200).json({
     success: true,

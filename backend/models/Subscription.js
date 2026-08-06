@@ -40,8 +40,10 @@ const subscriptionSchema = new mongoose.Schema(
   }
 );
 
-// Compiles a compound index to ensure one active subscription per user per tool
+// Compiles indexes to ensure fast subscription lookup & one active subscription per user per tool
 subscriptionSchema.index({ user: 1, tool: 1 }, { unique: true });
+subscriptionSchema.index({ user: 1, status: 1 });
+subscriptionSchema.index({ status: 1, expiresAt: 1 });
 
 const Subscription = mongoose.model('Subscription', subscriptionSchema);
 export default Subscription;

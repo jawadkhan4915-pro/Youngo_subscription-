@@ -23,13 +23,16 @@ export const protect = asyncHandler(async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'youngo_jwt_access_secret_token_99382!');
 
-    // Get user and attach to request
-    req.user = await User.findById(decoded.id);
+    // Get user and attach to request (optimized lean query)
+    const user = await User.findById(decoded.id).select('-password').lean();
 
-    if (!req.user) {
+    if (!user) {
       res.status(401);
       throw new Error('User not found with this token');
     }
+
+    user.id = user._id.toString();
+    req.user = user;
 
     if (req.user.status === 'Suspended' || req.user.status === 'Banned') {
       res.status(403);
@@ -69,7 +72,11 @@ export const optionalProtect = asyncHandler(async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'youngo_jwt_access_secret_token_99382!');
-      req.user = await User.findById(decoded.id);
+      const user = await User.findById(decoded.id).select('-password').lean();
+      if (user) {
+        user.id = user._id.toString();
+        req.user = user;
+      }
     } catch (error) {
       // Quietly ignore invalid/expired tokens for optional paths
     }

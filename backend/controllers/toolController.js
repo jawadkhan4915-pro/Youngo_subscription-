@@ -12,7 +12,7 @@ import { uploadImage } from '../config/cloudinary.js';
 // ==========================================
 
 export const getCategories = asyncHandler(async (req, res, next) => {
-  const categories = await Category.find();
+  const categories = await Category.find().lean();
   res.status(200).json({ success: true, data: categories });
 });
 
@@ -108,27 +108,27 @@ export const getTools = asyncHandler(async (req, res, next) => {
     query.name = { $regex: search, $options: 'i' };
   }
 
-  const tools = await AITool.find(query).populate('category', 'name icon');
+  const tools = await AITool.find(query).populate('category', 'name icon').lean();
   res.status(200).json({ success: true, count: tools.length, data: tools });
 });
 
 // Get single tool details
 export const getToolDetails = asyncHandler(async (req, res, next) => {
-  const tool = await AITool.findById(req.params.id).populate('category', 'name icon');
+  const tool = await AITool.findById(req.params.id).populate('category', 'name icon').lean();
   if (!tool) {
     res.status(404);
     throw new Error('AI Tool not found');
   }
 
   // Load reviews for this tool
-  const reviews = await Review.find({ tool: tool._id }).populate('user', 'name avatar');
+  const reviews = await Review.find({ tool: tool._id }).populate('user', 'name avatar').lean();
 
   // Check if user has an active subscription to this tool
   let isSubscribed = false;
   let remainingUserCredits = 0;
   if (req.user) {
-    const sub = await Subscription.findOne({ user: req.user.id, tool: tool._id, status: 'Active' });
-    if (sub && sub.expiresAt > Date.now()) {
+    const sub = await Subscription.findOne({ user: req.user.id, tool: tool._id, status: 'Active' }).lean();
+    if (sub && new Date(sub.expiresAt).getTime() > Date.now()) {
       isSubscribed = true;
       remainingUserCredits = sub.creditsRemaining;
     }

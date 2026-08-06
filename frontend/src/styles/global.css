@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import './variables.css';
 
 * {
@@ -6,6 +6,8 @@
   padding: 0;
   box-sizing: border-box;
   font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html {
@@ -22,6 +24,8 @@ body {
   position: static !important;
   top: 0px !important;
   transition: background-color var(--transition-speed), color var(--transition-speed);
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 /* Hide Google Translate Top Banner, Iframes & Tooltips to prevent double scrollbars */
@@ -41,7 +45,17 @@ iframe.goog-te-banner-frame,
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-secondary);
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
+}
+
+.font-display {
+  font-family: var(--font-secondary) !important;
+  letter-spacing: -0.035em;
 }
 
 a {

@@ -225,7 +225,7 @@ export const applyCoupon = asyncHandler(async (req, res, next) => {
 // @route   GET /api/orders/my-orders
 // @access  Private
 export const getMyOrders = asyncHandler(async (req, res, next) => {
-  const orders = await Order.find({ user: req.user.id }).sort('-createdAt');
+  const orders = await Order.find({ user: req.user.id }).sort('-createdAt').lean();
   res.status(200).json({ success: true, count: orders.length, data: orders });
 });
 
@@ -233,19 +233,20 @@ export const getMyOrders = asyncHandler(async (req, res, next) => {
 // @route   GET /api/orders/:id
 // @access  Private
 export const getOrderDetails = asyncHandler(async (req, res, next) => {
-  const order = await Order.findById(req.params.id).populate('user', 'name email');
+  const order = await Order.findById(req.params.id).populate('user', 'name email').lean();
   if (!order) {
     res.status(404);
     throw new Error('Order not found');
   }
 
   // Ensure owner or admin is requesting
-  if (order.user._id.toString() !== req.user.id && req.user.role !== 'Admin') {
+  const orderUserId = order.user._id ? order.user._id.toString() : order.user.toString();
+  if (orderUserId !== req.user.id && req.user.role !== 'Admin') {
     res.status(403);
     throw new Error('Access denied');
   }
 
-  const payment = await Payment.findOne({ order: order._id }).populate('verifiedBy', 'name');
+  const payment = await Payment.findOne({ order: order._id }).populate('verifiedBy', 'name').lean();
 
   res.status(200).json({
     success: true,
@@ -260,7 +261,7 @@ export const getOrderDetails = asyncHandler(async (req, res, next) => {
 
 // Get all orders (Admin)
 export const getAllOrders = asyncHandler(async (req, res, next) => {
-  const orders = await Order.find().populate('user', 'name email').sort('-createdAt');
+  const orders = await Order.find().populate('user', 'name email').sort('-createdAt').lean();
   res.status(200).json({ success: true, count: orders.length, data: orders });
 });
 
@@ -269,7 +270,8 @@ export const getPendingPayments = asyncHandler(async (req, res, next) => {
   const payments = await Payment.find({ status: 'Pending' })
     .populate('user', 'name email')
     .populate('order')
-    .sort('-createdAt');
+    .sort('-createdAt')
+    .lean();
 
   res.status(200).json({ success: true, data: payments });
 });

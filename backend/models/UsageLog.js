@@ -35,5 +35,9 @@ const usageLogSchema = new mongoose.Schema(
   }
 );
 
+usageLogSchema.index({ user: 1, createdAt: -1 });
+usageLogSchema.index({ tool: 1, createdAt: -1 });
+usageLogSchema.index({ user: 1, tool: 1, createdAt: -1 });
+
 const UsageLog = mongoose.model('UsageLog', usageLogSchema);
 export default UsageLog;
