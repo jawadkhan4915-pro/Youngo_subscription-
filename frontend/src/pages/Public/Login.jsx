@@ -101,7 +101,7 @@ const Login = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="auth-card-col"
           >
-            <TiltCard maxTilt={6} depth={15} glare={false} className="w-full">
+            <TiltCard maxTilt={4} depth={0} glare={false} className="w-full">
               <div className="glass-card auth-card">
                 {!showOTPVerify ? (
                   <>
@@ -227,7 +227,16 @@ const Login = () => {
                     </form>
 
                     <div className="auth-footer">
-                      Don't have an account? <Link to="/register">Sign up for free</Link>
+                      Don't have an account?{' '}
+                      <Link 
+                        to="/register" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/register');
+                        }}
+                      >
+                        Sign up for free
+                      </Link>
                     </div>
                   </>
                 ) : (

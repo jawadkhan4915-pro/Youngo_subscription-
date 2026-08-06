@@ -92,7 +92,7 @@ const ForgotResetPassword = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="auth-card-col"
           >
-            <TiltCard maxTilt={6} depth={15} glare={false} className="w-full">
+            <TiltCard maxTilt={4} depth={0} glare={false} className="w-full">
               <div className="glass-card auth-card">
                 {success ? (
                   <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
@@ -152,7 +152,16 @@ const ForgotResetPassword = () => {
                     </form>
 
                     <div className="auth-footer">
-                      Remember password? <Link to="/login">Sign in</Link>
+                      Remember password?{' '}
+                      <Link 
+                        to="/login" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/login');
+                        }}
+                      >
+                        Sign in
+                      </Link>
                     </div>
                   </>
                 ) : (

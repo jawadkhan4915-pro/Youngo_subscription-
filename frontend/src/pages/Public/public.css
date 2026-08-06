@@ -1068,15 +1068,25 @@
   border-top: 1px solid var(--border-color);
   font-size: 0.9rem;
   color: var(--text-muted);
+  position: relative;
+  z-index: 20;
 }
 
-.auth-footer a {
+.auth-footer a,
+.auth-footer button {
   color: var(--color-primary);
   font-weight: 600;
-  margin-left: 0.3rem;
+  margin-left: 0.35rem;
+  cursor: pointer;
+  position: relative;
+  z-index: 30;
+  pointer-events: auto !important;
+  display: inline-block;
+  text-decoration: none;
 }
 
-.auth-footer a:hover {
+.auth-footer a:hover,
+.auth-footer button:hover {
   text-decoration: underline;
 }
 

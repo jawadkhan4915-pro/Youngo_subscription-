@@ -65,7 +65,7 @@ const TiltCard = ({
         className="w-full h-full relative overflow-hidden rounded-[var(--radius-md)] transition-shadow duration-300"
       >
         {/* Card Content with 3D depth shift and click layer */}
-        <div style={{ transform: `translateZ(${depth}px)`, transformStyle: 'preserve-3d', position: 'relative', zIndex: 5 }}>
+        <div style={{ transform: depth > 0 ? `translateZ(${depth}px)` : 'none', transformStyle: 'preserve-3d', position: 'relative', zIndex: 5 }}>
           {children}
         </div>
 
