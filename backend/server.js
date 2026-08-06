@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
 import compression from 'compression';
+import hpp from 'hpp';
 import { rateLimit } from 'express-rate-limit';
 
 import connectDB from './config/db.js';
@@ -49,19 +50,36 @@ if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
 
-// Security headers
-app.use(helmet());
+// HTTP Parameter Pollution protection
+app.use(hpp());
+
+// Security headers with cross-origin resource support
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false
+  })
+);
 
 // Compress response payloads
 app.use(compression());
 
-// Setup CORS
-const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'];
+// Setup Strict CORS
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  process.env.CLIENT_URL
+].filter(Boolean);
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow all origins in development to prevent CORS blocks
-      callback(null, true);
+      // Allow requests with no origin (mobile apps, server-to-server, curl)
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Cross-Origin Request Blocked by Security Policy'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -69,7 +87,7 @@ app.use(
   })
 );
 
-// Rate limiting (100 requests per 15 minutes max for API)
+// Global API Limiter
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 200,
@@ -80,6 +98,38 @@ const apiLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false
 });
+
+// Dedicated Auth Limiter (Brute-force protection for sensitive auth paths)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  message: {
+    success: false,
+    error: 'Too many authentication attempts from this IP address. Please try again after 15 minutes.'
+  },
+  standardHeaders: 'draft-7',
+  legacyHeaders: false
+});
+
+// Dedicated AI Prompt Execution Limiter
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  message: {
+    success: false,
+    error: 'AI prompt execution limit reached. Please wait a minute before sending more requests.'
+  },
+  standardHeaders: 'draft-7',
+  legacyHeaders: false
+});
+
+// Mount dedicated rate limiters
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/verify-email', authLimiter);
+app.use('/api/auth/forgotpassword', authLimiter);
+app.use('/api/auth/resetpassword', authLimiter);
+app.use('/api/usage/execute', aiLimiter);
 app.use('/api/', apiLimiter);
 
 // Mount routes

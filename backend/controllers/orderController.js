@@ -47,12 +47,22 @@ export const checkout = asyncHandler(async (req, res, next) => {
     });
   }
 
-  // Apply Coupon if exists
+  // Apply Coupon if exists (Atomic Concurrency Hardened)
   let discount = 0;
   if (couponCode) {
-    const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: 'Active' });
-    if (coupon && coupon.expiryDate > Date.now() && coupon.usedCount < coupon.usageLimit) {
-      if (rawTotal >= coupon.minPurchase) {
+    const coupon = await Coupon.findOneAndUpdate(
+      {
+        code: couponCode.toUpperCase(),
+        status: 'Active',
+        expiryDate: { $gt: new Date() },
+        $expr: { $lt: ['$usedCount', '$usageLimit'] }
+      },
+      { $inc: { usedCount: 1 } },
+      { new: true }
+    );
+
+    if (coupon) {
+      if (rawTotal >= (coupon.minPurchase || 0)) {
         if (coupon.type === 'Percentage') {
           discount = (rawTotal * coupon.value) / 100;
           if (coupon.maxDiscount > 0) {
@@ -63,12 +73,12 @@ export const checkout = asyncHandler(async (req, res, next) => {
         }
         discount = Math.min(discount, rawTotal); // Discount cannot exceed raw price
 
-        // Increment coupon use
-        coupon.usedCount += 1;
         if (coupon.usedCount >= coupon.usageLimit) {
-          coupon.status = 'Expired';
+          await Coupon.findByIdAndUpdate(coupon._id, { status: 'Expired' });
         }
-        await coupon.save();
+      } else {
+        // Rollback atomic increment if minPurchase condition is not satisfied
+        await Coupon.findByIdAndUpdate(coupon._id, { $inc: { usedCount: -1 } });
       }
     }
   }
@@ -280,6 +290,11 @@ export const getPendingPayments = asyncHandler(async (req, res, next) => {
 export const verifyPayment = asyncHandler(async (req, res, next) => {
   const { paymentId, status, notes } = req.body; // status: 'Approved' or 'Rejected'
 
+  if (!['Approved', 'Rejected'].includes(status)) {
+    res.status(400);
+    throw new Error('Security Error: Invalid payment status parameter provided!');
+  }
+
   const payment = await Payment.findById(paymentId);
   if (!payment) {
     res.status(404);
@@ -311,7 +326,6 @@ export const verifyPayment = asyncHandler(async (req, res, next) => {
     await order.save();
 
     // 2. Allocate subscriptions and credits to User
-    const userWallet = await Wallet.findOne({ user: order.user });
     let totalPurchasedCredits = 0;
 
     for (const item of order.items) {
@@ -350,12 +364,17 @@ export const verifyPayment = asyncHandler(async (req, res, next) => {
       });
     }
 
-    // 3. Update User overall Wallet credits & add loyalty points (1 point per 10 PKR spent)
-    if (userWallet) {
-      userWallet.totalCredits += totalPurchasedCredits;
-      userWallet.loyaltyPoints += Math.floor(order.totalAmount / 10);
-      await userWallet.save();
-    }
+    // 3. Atomic update to User Wallet credits & loyalty points
+    await Wallet.findOneAndUpdate(
+      { user: order.user },
+      {
+        $inc: {
+          totalCredits: totalPurchasedCredits,
+          loyaltyPoints: Math.floor(order.totalAmount / 10)
+        }
+      },
+      { upsert: true }
+    );
 
     // 4. Create Audit Log
     await AuditLog.create({

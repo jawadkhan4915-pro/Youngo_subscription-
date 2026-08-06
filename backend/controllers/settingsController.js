@@ -384,17 +384,6 @@ export const redeemLoyaltyPoints = asyncHandler(async (req, res, next) => {
     throw new Error('Please enter a valid amount of loyalty points to redeem.');
   }
 
-  const wallet = await Wallet.findOne({ user: req.user.id });
-  if (!wallet) {
-    res.status(404);
-    throw new Error('Wallet not found');
-  }
-
-  if (wallet.loyaltyPoints < parsedPoints) {
-    res.status(400);
-    throw new Error(`Insufficient loyalty points! You have ${wallet.loyaltyPoints} points, but requested ${parsedPoints}.`);
-  }
-
   // Conversion: 10 loyalty points = 1 wallet credit
   const creditsToAward = Math.floor(parsedPoints / 10);
   if (creditsToAward <= 0) {
@@ -403,9 +392,23 @@ export const redeemLoyaltyPoints = asyncHandler(async (req, res, next) => {
   }
 
   const pointsUsed = creditsToAward * 10;
-  wallet.loyaltyPoints -= pointsUsed;
-  wallet.totalCredits += creditsToAward;
-  await wallet.save();
+
+  // Atomic Update with concurrency guard (prevents double redemption exploits)
+  const updatedWallet = await Wallet.findOneAndUpdate(
+    { user: req.user.id, loyaltyPoints: { $gte: pointsUsed } },
+    {
+      $inc: {
+        loyaltyPoints: -pointsUsed,
+        totalCredits: creditsToAward
+      }
+    },
+    { new: true }
+  );
+
+  if (!updatedWallet) {
+    res.status(400);
+    throw new Error('Insufficient loyalty points or concurrent transaction conflict!');
+  }
 
   // Audit transaction log
   await Transaction.create({
@@ -420,8 +423,8 @@ export const redeemLoyaltyPoints = asyncHandler(async (req, res, next) => {
     success: true,
     message: `Successfully redeemed ${pointsUsed} loyalty points for ${creditsToAward} wallet credits!`,
     data: {
-      loyaltyPoints: wallet.loyaltyPoints,
-      totalCredits: wallet.totalCredits
+      loyaltyPoints: updatedWallet.loyaltyPoints,
+      totalCredits: updatedWallet.totalCredits
     }
   });
 });

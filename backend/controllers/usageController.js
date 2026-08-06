@@ -104,6 +104,12 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
     throw new Error('Please enter a prompt or instruction');
   }
 
+  const cleanPrompt = prompt.trim();
+  if (cleanPrompt.length > 2000) {
+    res.status(400);
+    throw new Error('Security Error: Prompt exceeds maximum allowed length of 2000 characters!');
+  }
+
   if (!toolId) {
     res.status(400);
     throw new Error('Tool ID is required');
