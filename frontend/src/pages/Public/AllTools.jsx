@@ -64,7 +64,7 @@ const AllTools = () => {
       <div className="hero-mesh-bg" />
       <div className="hero-grid-overlay" />
 
-      <div className="container" style={{ padding: '4rem 1.5rem 6rem 1.5rem', minHeight: '80vh', position: 'relative', zIndex: 5 }}>
+      <div className="container" style={{ padding: '4rem 1.5rem 6rem 1.5rem', flex: 1, position: 'relative', zIndex: 5 }}>
         
         {/* Page Header */}
         <motion.div 

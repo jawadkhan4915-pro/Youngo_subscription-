@@ -8,7 +8,7 @@ const Privacy = () => {
   return (
     <>
       <Navbar />
-      <div className="container" style={{ padding: '4rem 1.5rem', minHeight: '85vh', maxWidth: '900px' }}>
+      <div className="container" style={{ padding: '4rem 1.5rem', flex: 1, maxWidth: '900px' }}>
         
         {/* Page Header */}
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>

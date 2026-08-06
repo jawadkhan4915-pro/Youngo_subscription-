@@ -72,7 +72,7 @@ const users = await User.find({ status: 'Active' });
   return (
     <>
       <Navbar />
-      <div className="container" style={{ padding: '4rem 1.5rem', minHeight: '80vh' }}>
+      <div className="container" style={{ padding: '4rem 1.5rem', flex: 1 }}>
         <Link to="/blogs" style={{
           display: 'inline-flex',
           alignItems: 'center',

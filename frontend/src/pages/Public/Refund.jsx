@@ -7,7 +7,7 @@ const Refund = () => {
   return (
     <>
       <Navbar />
-      <div className="container" style={{ padding: '4rem 1.5rem', minHeight: '80vh', maxWidth: '800px' }}>
+      <div className="container" style={{ padding: '4rem 1.5rem', flex: 1, maxWidth: '800px' }}>
         <h1 style={{ fontSize: '2.5rem', marginBottom: '1.5rem' }}>Refund Policy</h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '2rem' }}>Last updated: July 9, 2026</p>
 
