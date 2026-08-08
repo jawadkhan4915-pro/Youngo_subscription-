@@ -6,7 +6,6 @@ import { Lock, Mail, ArrowRight, ShieldAlert, KeyRound, Eye, EyeOff, Sparkles, S
 import Navbar from '../../components/Navbar.jsx';
 import Footer from '../../components/Footer.jsx';
 import Mascot3D from '../../components/Mascot3D.jsx';
-import TiltCard from '../../components/TiltCard.jsx';
 import './public.css';
 
 const Login = () => {
@@ -85,7 +84,7 @@ const Login = () => {
               Welcome to <span className="highlight-gradient">Youngo AI</span>
             </h2>
             <p className="auth-stage-sub">
-              Your AI assistant is ready. Sign in to access your shared credit wallet & unified playground.
+              Your AI assistant is ready. Sign in to access your shared credit wallet &amp; unified playground.
             </p>
             <div className="auth-feature-pills">
               <span className="auth-pill"><Zap size={12} style={{ display: 'inline', marginRight: 4 }} /> Instant Gateway</span>
@@ -101,7 +100,7 @@ const Login = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="auth-card-col"
           >
-            <TiltCard maxTilt={4} depth={0} glare={false} className="w-full">
+            <div className="auth-login-card-wrapper">
               <div className="glass-card auth-card">
                 {!showOTPVerify ? (
                   <>
@@ -169,7 +168,7 @@ const Login = () => {
                       </motion.div>
                     )}
 
-                    <form onSubmit={handleLoginSubmit}>
+                    <form onSubmit={handleLoginSubmit} noValidate>
                       <div className="form-group">
                         <label className="form-label">Email Address</label>
                         <div style={{ position: 'relative' }}>
@@ -184,7 +183,7 @@ const Login = () => {
                             required
                             style={{ paddingLeft: '2.5rem' }}
                           />
-                          <Mail size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                          <Mail size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                         </div>
                       </div>
 
@@ -205,7 +204,7 @@ const Login = () => {
                             required
                             style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                           />
-                          <Lock size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                          <Lock size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                           <button
                             type="button"
                             className="password-toggle-btn"
@@ -228,15 +227,7 @@ const Login = () => {
 
                     <div className="auth-footer">
                       Don't have an account?{' '}
-                      <Link 
-                        to="/register" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate('/register');
-                        }}
-                      >
-                        Sign up for free
-                      </Link>
+                      <Link to="/register">Sign up for free</Link>
                     </div>
                   </>
                 ) : (
@@ -264,7 +255,7 @@ const Login = () => {
                       </div>
                     )}
 
-                    <form onSubmit={handleOTPSubmit}>
+                    <form onSubmit={handleOTPSubmit} noValidate>
                       <div className="form-group">
                         <label className="form-label">Enter 6-Digit Code</label>
                         <div style={{ position: 'relative' }}>
@@ -278,7 +269,7 @@ const Login = () => {
                             required
                             style={{ paddingLeft: '2.5rem', letterSpacing: '0.4em', fontWeight: 'bold', fontSize: '1.25rem', textAlign: 'center' }}
                           />
-                          <KeyRound size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                          <KeyRound size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                         </div>
                       </div>
 
@@ -288,12 +279,13 @@ const Login = () => {
                     </form>
 
                     <div className="auth-footer">
-                      Need to change email? <button onClick={() => setShowOTPVerify(false)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}>Go back</button>
+                      Need to change email?{' '}
+                      <button type="button" onClick={() => setShowOTPVerify(false)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600, fontSize: 'inherit' }}>Go back</button>
                     </div>
                   </>
                 )}
               </div>
-            </TiltCard>
+            </div>
           </motion.div>
 
         </div>

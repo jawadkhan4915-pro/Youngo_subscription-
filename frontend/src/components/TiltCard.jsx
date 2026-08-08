@@ -4,6 +4,8 @@ import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 /**
  * Reusable 3D Perspective Tilt Card with hardware-accelerated Framer Motion
  * Creates realistic 3D depth, tilt, and dynamic lighting glare illusion.
+ * Fixed: removed transformStyle: preserve-3d from content wrapper to prevent
+ * pointer-event blocking on interactive elements (inputs, buttons, links).
  */
 const TiltCard = ({ 
   children, 
@@ -49,23 +51,25 @@ const TiltCard = ({
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
       style={{
-        perspective: 1000,
-        transformStyle: 'preserve-3d',
+        perspective: '1000px',
+        position: 'relative',
         ...style,
       }}
-      className={`relative ${className}`}
+      className={className}
       {...props}
     >
       <motion.div
         style={{
           rotateX: rotateXSpring,
           rotateY: rotateYSpring,
-          transformStyle: 'preserve-3d',
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          borderRadius: 'var(--radius-md)',
         }}
-        className="w-full h-full relative overflow-hidden rounded-[var(--radius-md)] transition-shadow duration-300"
       >
-        {/* Card Content with 3D depth shift and click layer */}
-        <div style={{ transform: depth > 0 ? `translateZ(${depth}px)` : 'none', transformStyle: 'preserve-3d', position: 'relative', zIndex: 5 }}>
+        {/* Card Content */}
+        <div style={{ position: 'relative', zIndex: 5 }}>
           {children}
         </div>
 
@@ -76,12 +80,21 @@ const TiltCard = ({
               position: 'absolute',
               inset: 0,
               pointerEvents: 'none',
-              background: `radial-gradient(circle at ${glareX.get()} ${glareY.get()}, rgba(255, 255, 255, 0.22) 0%, transparent 60%)`,
-              opacity: glareOpacity,
               borderRadius: 'inherit',
               zIndex: 10,
+              opacity: glareOpacity,
             }}
-          />
+          >
+            <motion.div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: 'inherit',
+                background: `radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18) 0%, transparent 60%)`,
+                pointerEvents: 'none',
+              }}
+            />
+          </motion.div>
         )}
       </motion.div>
     </motion.div>

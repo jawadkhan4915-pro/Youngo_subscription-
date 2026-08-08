@@ -52,11 +52,13 @@ export const AuthProvider = ({ children }) => {
         await fetchMe(); // Fetch full wallet details
         return { success: true };
       }
-      return { success: false, message: 'Invalid response' };
+      return { success: false, message: res.data?.message || 'Invalid response' };
     } catch (err) {
+      // Backend returns 'message' for verification errors and 'error' for other errors
+      const message = err.response?.data?.message || err.response?.data?.error || 'Login failed. Please check credentials.';
       return {
         success: false,
-        message: err.response?.data?.error || 'Login failed. Please check credentials.'
+        message
       };
     }
   };

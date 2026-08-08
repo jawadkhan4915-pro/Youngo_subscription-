@@ -1000,6 +1000,12 @@
   justify-content: center;
 }
 
+.auth-login-card-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .auth-card {
   width: 100%;
   max-width: 480px;
@@ -1007,6 +1013,20 @@
   box-shadow: var(--shadow-premium);
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
+  /* Override overflow:hidden from glass-card so button hover effects work */
+  overflow: visible;
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure all interactive elements inside auth-card are clickable */
+.auth-card form,
+.auth-card button,
+.auth-card input,
+.auth-card a,
+.auth-card label {
+  position: relative;
+  z-index: 15;
 }
 
 .auth-header {

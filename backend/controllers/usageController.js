@@ -7,24 +7,51 @@ import { asyncHandler } from '../middlewares/error.js';
 import axios from 'axios';
 
 // ============================================================
-// REAL AI ENGINE — calls Gemini Free Tier as the universal AI
-// Falls back to smart simulation if no key or API error
+// AI ENGINE PRIORITY CHAIN:
+//   1. Tool's own dedicated API key (OpenAI / Gemini / Anthropic / Custom)
+//   2. Global GEMINI_API_KEY from .env (shared Gemini)
+//   3. Smart Simulation (always available, no key needed)
 // ============================================================
 
 /**
- * Call Google Gemini API (free tier works without billing)
- * Used as the universal AI backend for ALL tool types
+ * Call OpenAI API with the tool's own key
  */
-async function callGeminiAPI(systemContext, userPrompt) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('No Gemini API key configured');
+async function callOpenAI(apiKey, model, systemContext, userPrompt) {
+  const messages = [];
+  if (systemContext) messages.push({ role: 'system', content: systemContext });
+  messages.push({ role: 'user', content: userPrompt });
 
+  const response = await axios.post(
+    'https://api.openai.com/v1/chat/completions',
+    {
+      model: model || 'gpt-3.5-turbo',
+      messages,
+      max_tokens: 1024,
+      temperature: 0.85
+    },
+    {
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      timeout: 25000
+    }
+  );
+
+  const text = response.data?.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Empty response from OpenAI API');
+  return text;
+}
+
+/**
+ * Call Google Gemini API with a provided key (tool-specific or global)
+ */
+async function callGeminiWithKey(apiKey, model, systemContext, userPrompt) {
   const fullPrompt = systemContext
     ? `${systemContext}\n\nUser: ${userPrompt}`
     : userPrompt;
 
+  const geminiModel = model || 'gemini-1.5-flash';
+
   const response = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`,
     {
       contents: [{ parts: [{ text: fullPrompt }] }],
       generationConfig: {
@@ -49,10 +76,70 @@ async function callGeminiAPI(systemContext, userPrompt) {
 }
 
 /**
- * Build a system context prompt based on tool type
- * Gemini impersonates each AI tool's persona
+ * Call Anthropic Claude API with the tool's own key
  */
-function buildSystemContext(toolName) {
+async function callAnthropic(apiKey, model, systemContext, userPrompt) {
+  const body = {
+    model: model || 'claude-3-haiku-20240307',
+    max_tokens: 1024,
+    messages: [{ role: 'user', content: userPrompt }]
+  };
+  if (systemContext) body.system = systemContext;
+
+  const response = await axios.post(
+    'https://api.anthropic.com/v1/messages',
+    body,
+    {
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
+      },
+      timeout: 25000
+    }
+  );
+
+  const text = response.data?.content?.[0]?.text;
+  if (!text) throw new Error('Empty response from Anthropic API');
+  return text;
+}
+
+/**
+ * Call a fully custom REST endpoint with the tool's key
+ * Endpoint is expected to accept { prompt, system } and return { result } or { response }
+ */
+async function callCustomEndpoint(apiKey, endpoint, systemContext, userPrompt) {
+  const response = await axios.post(
+    endpoint,
+    { prompt: userPrompt, system: systemContext, message: userPrompt },
+    {
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      timeout: 25000
+    }
+  );
+
+  const text = response.data?.result
+    || response.data?.response
+    || response.data?.text
+    || response.data?.content
+    || JSON.stringify(response.data).substring(0, 1000);
+  return text;
+}
+
+/**
+ * Call Global Gemini API (uses env GEMINI_API_KEY — shared fallback)
+ */
+async function callGeminiAPI(systemContext, userPrompt) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('No Gemini API key configured');
+  return callGeminiWithKey(apiKey, 'gemini-1.5-flash', systemContext, userPrompt);
+}
+
+/**
+ * Build a system context prompt based on tool name & optional model override
+ * The AI impersonates each tool's persona for realistic responses
+ */
+function buildSystemContext(toolName, modelOverride) {
   const name = toolName.toLowerCase();
 
   if (name.includes('chatgpt') || name.includes('openai')) {
@@ -116,7 +203,8 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
   }
 
   // 1. Fetch AI Tool details
-  const tool = await AITool.findById(toolId);
+  // Fetch tool with apiKey (normally hidden by select:false)
+  const tool = await AITool.findById(toolId).select('+apiKey');
   if (!tool) {
     res.status(404);
     throw new Error('AI Tool not found. Please re-select your subscription.');
@@ -181,16 +269,63 @@ export const executeToolPrompt = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // 5. Call AI Engine — Real Gemini API → Smart Simulation fallback
+  // 5. Call AI Engine — Priority Chain:
+  //    a) Tool's own dedicated API key
+  //    b) Global Gemini API key (env)
+  //    c) Smart Simulation fallback
   let responseData = '';
   let aiEngine = 'simulation';
 
-  try {
-    const systemContext = buildSystemContext(tool.name);
-    responseData = await callGeminiAPI(systemContext, prompt);
-    aiEngine = 'gemini';
-  } catch (apiError) {
-    console.log(`[Playground] Gemini API unavailable (${apiError.message}), using smart simulation for ${tool.name}`);
+  const systemContext = buildSystemContext(tool.name, tool.apiModel);
+  const hasToolKey = tool.apiKey && tool.apiKey.trim().length > 0;
+
+  // ── a) Try tool's own API key first ──────────────────────────
+  if (hasToolKey && tool.apiType && tool.apiType !== 'none') {
+    try {
+      switch (tool.apiType) {
+        case 'openai':
+          responseData = await callOpenAI(tool.apiKey, tool.apiModel, systemContext, prompt);
+          aiEngine = `openai/${tool.apiModel || 'gpt-3.5-turbo'}`;
+          break;
+        case 'gemini':
+          responseData = await callGeminiWithKey(tool.apiKey, tool.apiModel, systemContext, prompt);
+          aiEngine = `gemini/${tool.apiModel || 'gemini-1.5-flash'}`;
+          break;
+        case 'anthropic':
+          responseData = await callAnthropic(tool.apiKey, tool.apiModel, systemContext, prompt);
+          aiEngine = `anthropic/${tool.apiModel || 'claude-3-haiku'}`;
+          break;
+        case 'elevenlabs':
+          // ElevenLabs is a voice API — for text prompts fall back to Gemini with TTS persona
+          responseData = await callGeminiAPI(systemContext, prompt);
+          aiEngine = 'elevenlabs-text';
+          break;
+        case 'custom':
+          responseData = await callCustomEndpoint(tool.apiKey, tool.apiEndpoint, systemContext, prompt);
+          aiEngine = 'custom-endpoint';
+          break;
+        default:
+          throw new Error(`Unknown apiType: ${tool.apiType}`);
+      }
+      console.log(`[Playground] ✅ Used tool's own ${tool.apiType} key for ${tool.name}`);
+    } catch (toolApiError) {
+      console.warn(`[Playground] ⚠️ Tool API (${tool.apiType}) failed for ${tool.name}: ${toolApiError.message}. Falling back to global Gemini.`);
+      hasToolKey && (responseData = ''); // Reset for next attempt
+    }
+  }
+
+  // ── b) Try global Gemini key if tool key failed or not set ───
+  if (!responseData) {
+    try {
+      responseData = await callGeminiAPI(systemContext, prompt);
+      aiEngine = 'gemini-global';
+    } catch (apiError) {
+      console.log(`[Playground] Global Gemini unavailable (${apiError.message}), using smart simulation for ${tool.name}`);
+    }
+  }
+
+  // ── c) Smart simulation as final fallback ─────────────────────
+  if (!responseData) {
     responseData = getSmartSimulatedResponse(tool.name, prompt);
     aiEngine = 'simulation';
   }

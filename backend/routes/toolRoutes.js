@@ -10,7 +10,8 @@ import {
   updateTool,
   deleteTool,
   adjustUserCredits,
-  addReview
+  addReview,
+  testToolAPI
 } from '../controllers/toolController.js';
 import { protect, authorize, optionalProtect } from '../middlewares/auth.js';
 import upload from '../middlewares/upload.js';
@@ -39,5 +40,8 @@ router.put('/:id', protect, authorize('Admin'), upload.fields([
   { name: 'banner', maxCount: 1 }
 ]), updateTool);
 router.delete('/:id', protect, authorize('Admin'), deleteTool);
+
+// API Key Test Route — Admin only
+router.post('/:id/test-api', protect, authorize('Admin'), testToolAPI);
 
 export default router;
